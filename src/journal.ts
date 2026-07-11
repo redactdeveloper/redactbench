@@ -33,6 +33,8 @@ const RunStartedSchema = z
         scorerVersion: z.string().min(1).max(64),
         startedAt: DateTimeSchema,
         repeatCount: z.number().int().positive(),
+        concurrency: z.number().int().min(1).max(8).optional(),
+        seed: z.number().int().min(0).max(4_294_967_295).optional(),
         models: z.array(
           z
             .object({

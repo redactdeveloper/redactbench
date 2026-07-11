@@ -26,7 +26,7 @@ const FixtureResponseSchema = z
     message: "ttftMs must not exceed durationMs"
   });
 
-const FixtureFileSchema = z
+export const FixtureFileSchema = z
   .object({
     schemaVersion: z.literal(1),
     responses: z.record(z.string().min(1).max(240), FixtureResponseSchema)

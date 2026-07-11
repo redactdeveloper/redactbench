@@ -39,6 +39,7 @@ type AttemptExecutor = (input: RunAttemptInput) => Promise<AttemptOutcome>;
 
 export interface RunBenchmarkInput {
   afterRecoveryPhase1?: (attemptId: string) => Promise<void> | void;
+  concurrency?: number;
   createAdapter?: (model: ModelConfig) => ProviderAdapter;
   executeAttempt?: AttemptExecutor;
   journalFile: string;
@@ -48,6 +49,7 @@ export interface RunBenchmarkInput {
   repeatCount: number;
   runId: string;
   sandbox?: SandboxRunner;
+  seed?: number;
   suite: Suite;
   suiteDirectory: string;
 }
@@ -79,13 +81,17 @@ function configurationHash(
   suite: Suite,
   tasks: readonly TaskBundle[],
   models: ModelConfigFile,
-  repeatCount: number
+  repeatCount: number,
+  concurrency: number,
+  seed: number | undefined
 ): string {
   return createHash("sha256")
     .update(
       stableStringify({
         models,
+        concurrency,
         repeatCount,
+        seed: seed ?? null,
         suite,
         tasks: tasks.map((bundle) => ({ task: bundle.task, weight: bundle.weight }))
       })
@@ -93,9 +99,50 @@ function configurationHash(
     .digest("hex");
 }
 
+interface AttemptJob {
+  bundle: TaskBundle;
+  model: ModelConfig;
+  repeat: number;
+}
+
+function shuffledJobs(jobs: AttemptJob[], seed: number | undefined): AttemptJob[] {
+  if (seed === undefined) {
+    return jobs;
+  }
+  let state = seed >>> 0;
+  const random = () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296;
+  };
+  for (let index = jobs.length - 1; index > 0; index -= 1) {
+    const other = Math.floor(random() * (index + 1));
+    [jobs[index], jobs[other]] = [jobs[other]!, jobs[index]!];
+  }
+  return jobs;
+}
+
 export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
   if (!Number.isInteger(input.repeatCount) || input.repeatCount < 1 || input.repeatCount > 100) {
     throw new RedactBenchError("CONFIG_INVALID", "repeatCount must be between 1 and 100");
+  }
+  const concurrency = input.concurrency ?? 1;
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8) {
+    throw new RedactBenchError(
+      "CONFIG_INVALID",
+      "concurrency must be between 1 and 8"
+    );
+  }
+  if (
+    input.seed !== undefined &&
+    (!Number.isInteger(input.seed) || input.seed < 0 || input.seed > 4_294_967_295)
+  ) {
+    throw new RedactBenchError(
+      "CONFIG_INVALID",
+      "seed must be an integer between 0 and 4294967295"
+    );
   }
 
   const now = input.now ?? Date.now;
@@ -104,7 +151,9 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
     input.suite,
     tasks,
     input.models,
-    input.repeatCount
+    input.repeatCount,
+    concurrency,
+    input.seed
   );
   const journal = await Journal.open(input.journalFile);
   const existingStarts = journal.entries.filter(
@@ -122,6 +171,8 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
         scorerVersion: input.suite.scorerVersion,
         startedAt: new Date(now()).toISOString(),
         repeatCount: input.repeatCount,
+        concurrency,
+        ...(input.seed === undefined ? {} : { seed: input.seed }),
         models: input.models.models.map((model) => ({
           id: model.id,
           label: model.label,
@@ -247,14 +298,29 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
         fixtureBaseDirectory: resolve(input.modelConfigDirectory)
       }));
   const adapters = new Map<string, ProviderAdapter>();
-
+  const jobs: AttemptJob[] = [];
   for (const bundle of tasks) {
     for (const model of input.models.models) {
       for (let repeat = 1; repeat <= input.repeatCount; repeat += 1) {
         const attemptId = `${input.runId}:${bundle.task.id}:${model.id}:${repeat}`;
-        if (completed.has(attemptId)) {
-          continue;
+        if (!completed.has(attemptId)) {
+          jobs.push({ bundle, model, repeat });
         }
+      }
+    }
+  }
+  shuffledJobs(jobs, input.seed);
+  let nextJob = 0;
+
+  const worker = async () => {
+    while (nextJob < jobs.length) {
+      const job = jobs[nextJob];
+      nextJob += 1;
+      if (!job) {
+        return;
+      }
+      const { bundle, model, repeat } = job;
+      const attemptId = `${input.runId}:${bundle.task.id}:${model.id}:${repeat}`;
         let adapter = adapters.get(model.id);
         if (!adapter) {
           adapter = adapterFactory(model);
@@ -290,9 +356,9 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
           );
         }
         completed.add(attemptId);
-      }
     }
-  }
+  };
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
 
   if (!alreadyMarkedComplete) {
     await journal.append({

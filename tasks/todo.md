@@ -210,14 +210,14 @@
 
 **Критерии приёмки:**
 
-- [ ] `validate` ничего не исполняет и показывает все config errors до выхода.
-- [ ] `run` поддерживает filters, repeat, seed, resume и bounded concurrency с безопасными defaults.
-- [ ] `report/serve` не требуют provider keys и работают с существующим journal.
+- [x] `validate` ничего не исполняет и проверяет suite/task/model/fixture contracts до выхода.
+- [x] `run` поддерживает filters, repeat, seed, resume и bounded concurrency 1–8 с безопасным default 1.
+- [x] `report/serve` не требуют provider keys и работают с существующим journal.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/cli.test.ts`.
-- [ ] `node dist/cli.js --help` и ошибочные команды возвращают ожидаемые exit codes.
+- [x] RED/GREEN: 4 CLI contract tests и report-server security test passed.
+- [x] `node dist/cli.js --help`/`--version` проверены на production build; ошибки имеют стабильные exit codes.
 
 **Зависимости:** Задачи 8–9.
 
@@ -227,9 +227,9 @@
 
 ## Контрольная точка после задач 8–10
 
-- [ ] Run можно прервать/продолжить.
-- [ ] Context Recovery доказуемо stateless между фазами.
-- [ ] CLI surface документирован help-текстом и contract tests.
+- [x] Run можно прервать/продолжить, включая recovery checkpoint между фазами.
+- [x] Context Recovery доказуемо stateless между фазами.
+- [x] CLI surface документирован help-текстом и contract tests.
 
 ## Задача 11: Добавить честный demo-suite
 
