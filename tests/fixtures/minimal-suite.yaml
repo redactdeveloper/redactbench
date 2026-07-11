@@ -1,0 +1,6 @@
+schemaVersion: 1
+id: demo
+title: RedactBench demo
+description: Small deterministic suite for local smoke tests.
+tasks:
+  - manifest: debugging-get-user/task.yaml

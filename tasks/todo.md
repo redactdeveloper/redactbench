@@ -29,15 +29,15 @@
 
 **Критерии приёмки:**
 
-- [ ] Валидный минимальный task/model config разбирается в типизированный объект.
-- [ ] Неизвестные категории, provider variants, absolute/escaping paths, shell-строки и неограниченные ресурсы отклоняются.
-- [ ] Schema version и error code сохраняются стабильными и документированными.
+- [x] Валидный минимальный task/model config разбирается в типизированный объект.
+- [x] Неизвестные категории, provider variants, absolute/escaping paths, shell-строки и неограниченные ресурсы отклоняются.
+- [x] Schema version и error code сохраняются стабильными и документированными.
 
 **Проверка:**
 
-- [ ] RED: `npm test -- tests/contracts.test.ts` падает до реализации.
-- [ ] GREEN: `npm test -- tests/contracts.test.ts` проходит после реализации.
-- [ ] `npm run typecheck`
+- [x] RED: `npm test -- tests/contracts.test.ts` упал на отсутствующем `src/config.js`.
+- [x] GREEN: `npm test -- tests/contracts.test.ts` — 13 tests passed.
+- [x] `npm run typecheck` — passed.
 
 **Зависимости:** Задача 1.
 
