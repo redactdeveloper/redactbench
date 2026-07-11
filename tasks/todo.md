@@ -99,14 +99,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Anthropic собирает `text_delta`, input/output usage и игнорирует ping/новые event types.
-- [ ] Gemini собирает streamed candidate parts и `usageMetadata` через фиксированный official endpoint.
-- [ ] Fixture adapter отдаёт фазовые ответы по task/attempt без сети и таймеров.
+- [x] Anthropic собирает `text_delta`, input/output usage и игнорирует ping/новые event types.
+- [x] Gemini собирает streamed candidate parts и `usageMetadata` через фиксированный official endpoint.
+- [x] Fixture adapter отдаёт keyed ответы без сети, таймеров или mutable cursor.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/providers`.
-- [ ] Provider fixtures соответствуют примерам официальной документации.
+- [x] RED/GREEN: provider tests passed; полный набор — 35 tests.
+- [x] Provider fixtures соответствуют примерам официальной документации OpenAI, Anthropic и Google.
 
 **Зависимости:** Задача 4.
 

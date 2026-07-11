@@ -1,6 +1,7 @@
 import type { ProviderName } from "../contracts.js";
 
 export interface GenerationRequest {
+  fixtureResponseKey?: string;
   maxOutputTokens: number;
   prompt: string;
   system: string;
