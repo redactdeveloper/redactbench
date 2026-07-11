@@ -168,14 +168,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Journal дописывается атомарно и сохраняет config/prompt/scorer/image fingerprints.
-- [ ] Resume пропускает только завершённые attempt IDs и продолжает незавершённые.
-- [ ] Aggregator считает category score, total score, TTFT, output tokens/sec, cost и cost-per-correct с явными null при отсутствии данных.
+- [x] Journal дописывается с fsync и hash chain, сохраняя config/prompt/scorer/image fingerprints.
+- [x] Resume пропускает только завершённые attempt IDs и продолжает незавершённые.
+- [x] Aggregator считает category score, total score, TTFT, output tokens/sec, cost и cost-per-correct с явными null при отсутствии данных.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/journal.test.ts tests/aggregate.test.ts`.
-- [ ] Повторная агрегация одного journal byte-for-byte стабильна кроме generated timestamp.
+- [x] RED/GREEN: journal/aggregate/run tests passed; полный набор — 50 tests.
+- [x] Повторная агрегация deduplicated journal стабильна, а generated timestamp передаётся явно.
 
 **Зависимости:** Задача 7.
 

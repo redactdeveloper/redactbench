@@ -2,6 +2,7 @@ export type RedactBenchErrorCode =
   | "ATTEMPT_ERROR"
   | "CHECK_TIMEOUT"
   | "CONFIG_INVALID"
+  | "JOURNAL_INVALID"
   | "PATCH_REJECTED"
   | "PROVIDER_ERROR"
   | "SANDBOX_ERROR";
