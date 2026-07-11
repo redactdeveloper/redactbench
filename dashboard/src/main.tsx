@@ -1,11 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import "./styles.css";
+import "@fontsource/ibm-plex-mono/latin-400.css";
+import "@fontsource/ibm-plex-mono/latin-500.css";
+import "@fontsource/roboto-condensed/latin-400.css";
+import "@fontsource/roboto-condensed/latin-600.css";
+import "@fontsource/roboto-condensed/latin-700.css";
 
-function App() {
-  return <main>RedactBench dashboard is initialized.</main>;
-}
+import { Dashboard } from "./App.js";
+import "./styles.css";
 
 const root = document.querySelector<HTMLDivElement>("#root");
 
@@ -15,6 +18,6 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <Dashboard />
   </StrictMode>
 );

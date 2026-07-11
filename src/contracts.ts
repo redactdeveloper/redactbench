@@ -1,5 +1,3 @@
-import { posix } from "node:path";
-
 import { z } from "zod";
 
 import { SCHEMA_VERSION } from "./version.js";
@@ -46,12 +44,9 @@ function isSafeRelativePath(value: string, allowDot: boolean): boolean {
     return allowDot;
   }
 
-  const normalized = posix.normalize(value);
-  return (
-    normalized === value &&
-    normalized !== ".." &&
-    !normalized.startsWith("../") &&
-    !normalized.includes("/../")
+  const segments = value.split("/");
+  return segments.every(
+    (segment) => segment.length > 0 && segment !== "." && segment !== ".."
   );
 }
 

@@ -1,0 +1,620 @@
+{
+  "schemaVersion": 1,
+  "scorerVersion": "1.0.0",
+  "generatedAt": "2026-07-11T23:18:07.421Z",
+  "run": {
+    "id": "demo",
+    "title": "RedactBench Demo",
+    "startedAt": "2026-07-11T23:17:35.712Z",
+    "completedAt": "2026-07-11T23:17:47.297Z",
+    "modelCount": 3,
+    "repeatCount": 1,
+    "taskCount": 3
+  },
+  "leaderboard": [
+    {
+      "modelId": "fixture-strong",
+      "label": "Fixture Strong",
+      "provider": "fixture",
+      "score": 1,
+      "categories": {
+        "debugging": 1,
+        "hallucination": 1,
+        "context-recovery": 1
+      },
+      "metrics": {
+        "attemptCount": 3,
+        "avgTtftMs": 680,
+        "correctCount": 3,
+        "costPerCorrectUsd": 0.0011026666666666667,
+        "outputTokensPerSecond": 80.92964832608351,
+        "totalCostUsd": 0.003308
+      }
+    },
+    {
+      "modelId": "fixture-fast",
+      "label": "Fixture Fast",
+      "provider": "fixture",
+      "score": 0.6222222222222222,
+      "categories": {
+        "debugging": 0.6,
+        "hallucination": 0.6,
+        "context-recovery": 0.6666666666666666
+      },
+      "metrics": {
+        "attemptCount": 3,
+        "avgTtftMs": 248.33333333333334,
+        "correctCount": 0,
+        "costPerCorrectUsd": null,
+        "outputTokensPerSecond": 134.3840579710145,
+        "totalCostUsd": 0.0006889999999999999
+      }
+    },
+    {
+      "modelId": "fixture-cautious",
+      "label": "Fixture Cautious",
+      "provider": "fixture",
+      "score": 0.37777777777777777,
+      "categories": {
+        "debugging": 0.8,
+        "hallucination": 0,
+        "context-recovery": 0.3333333333333333
+      },
+      "metrics": {
+        "attemptCount": 3,
+        "avgTtftMs": 1026.6666666666667,
+        "correctCount": 0,
+        "costPerCorrectUsd": null,
+        "outputTokensPerSecond": 57.46337567673544,
+        "totalCostUsd": 0.0016055000000000002
+      }
+    }
+  ],
+  "attempts": [
+    {
+      "attemptId": "demo:debug-get-user:fixture-cautious:1",
+      "taskId": "debug-get-user",
+      "taskTitle": "Fix getUser ID lookup",
+      "category": "debugging",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:38.738Z",
+      "completedAt": "2026-07-11T23:17:39.992Z",
+      "status": "failed",
+      "score": 0.8,
+      "metrics": {
+        "costUsd": 0.000377,
+        "durationMs": 1254,
+        "inputTokens": 410,
+        "outputTokens": 86,
+        "outputTokensPerSecond": 60.13986013986014,
+        "ttftMs": 1040
+      },
+      "checks": [
+        {
+          "id": "ordered-ids",
+          "label": "Ordered IDs",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 273,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "sparse-ids",
+          "label": "Sparse IDs",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 286,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "missing-user",
+          "label": "Missing user",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 266,
+          "exitCode": 1,
+          "output": "Scenario failed: missing\n"
+        },
+        {
+          "id": "empty-array",
+          "label": "Empty array",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 273,
+          "exitCode": 0,
+          "output": ""
+        }
+      ]
+    },
+    {
+      "attemptId": "demo:recover-port-utils:fixture-cautious:1",
+      "taskId": "recover-port-utils",
+      "taskTitle": "Recover and finish port utilities",
+      "category": "context-recovery",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:45.865Z",
+      "completedAt": "2026-07-11T23:17:47.290Z",
+      "status": "failed",
+      "score": 0.3333333333333333,
+      "metrics": {
+        "costUsd": 0.001085,
+        "durationMs": 1425,
+        "inputTokens": 1150,
+        "outputTokens": 255,
+        "outputTokensPerSecond": 76.80722891566265,
+        "ttftMs": 1150
+      },
+      "checks": [
+        {
+          "id": "parse-valid",
+          "label": "Parses valid ports",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 281,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "parse-invalid",
+          "label": "Rejects malformed ports",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 294,
+          "exitCode": 1,
+          "output": "Recovery scenario failed: parse-invalid\n"
+        },
+        {
+          "id": "format-valid",
+          "label": "Formats valid ports",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 269,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "format-invalid",
+          "label": "Rejects invalid formatting input",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 280,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "contextRecovery": {
+        "checksPassed": 3,
+        "duplicateEdits": 0,
+        "notesPreserved": true,
+        "notesTotal": 8,
+        "recoveryMs": 2760,
+        "rollbackDetected": true
+      }
+    },
+    {
+      "attemptId": "demo:reject-false-find-premise:fixture-cautious:1",
+      "taskId": "reject-false-find-premise",
+      "taskTitle": "Reject a false Array.find premise",
+      "category": "hallucination",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:41.902Z",
+      "completedAt": "2026-07-11T23:17:42.935Z",
+      "status": "failed",
+      "score": 0,
+      "metrics": {
+        "costUsd": 0.0001435,
+        "durationMs": 1033,
+        "inputTokens": 175,
+        "outputTokens": 28,
+        "outputTokensPerSecond": 35.44303797468354,
+        "ttftMs": 890
+      },
+      "checks": [
+        {
+          "id": "pushes-back",
+          "label": "Rejects premise",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 303,
+          "exitCode": 1,
+          "output": "Evidence check failed: pushback\n"
+        },
+        {
+          "id": "correct-result",
+          "label": "Names undefined result",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 288,
+          "exitCode": 1,
+          "output": "Evidence check failed: undefined\n"
+        },
+        {
+          "id": "actionable-evidence",
+          "label": "Gives actionable evidence",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 305,
+          "exitCode": 1,
+          "output": "Evidence check failed: evidence\n"
+        }
+      ]
+    },
+    {
+      "attemptId": "demo:debug-get-user:fixture-fast:1",
+      "taskId": "debug-get-user",
+      "taskTitle": "Fix getUser ID lookup",
+      "category": "debugging",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:37.478Z",
+      "completedAt": "2026-07-11T23:17:38.734Z",
+      "status": "failed",
+      "score": 0.6,
+      "metrics": {
+        "costUsd": 0.0001675,
+        "durationMs": 1256,
+        "inputTokens": 390,
+        "outputTokens": 70,
+        "outputTokensPerSecond": 152.17391304347825,
+        "ttftMs": 260
+      },
+      "checks": [
+        {
+          "id": "ordered-ids",
+          "label": "Ordered IDs",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 262,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "sparse-ids",
+          "label": "Sparse IDs",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 271,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "missing-user",
+          "label": "Missing user",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 297,
+          "exitCode": 1,
+          "output": "Scenario failed: missing\n"
+        },
+        {
+          "id": "empty-array",
+          "label": "Empty array",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 244,
+          "exitCode": 1,
+          "output": "Scenario failed: empty\n"
+        }
+      ]
+    },
+    {
+      "attemptId": "demo:recover-port-utils:fixture-fast:1",
+      "taskId": "recover-port-utils",
+      "taskTitle": "Recover and finish port utilities",
+      "category": "context-recovery",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:44.486Z",
+      "completedAt": "2026-07-11T23:17:45.857Z",
+      "status": "failed",
+      "score": 0.6666666666666666,
+      "metrics": {
+        "costUsd": 0.00045799999999999997,
+        "durationMs": 1371,
+        "inputTokens": 1080,
+        "outputTokens": 188,
+        "outputTokensPerSecond": 163.47826086956522,
+        "ttftMs": 295
+      },
+      "checks": [
+        {
+          "id": "parse-valid",
+          "label": "Parses valid ports",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 287,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "parse-invalid",
+          "label": "Rejects malformed ports",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 268,
+          "exitCode": 1,
+          "output": "Recovery scenario failed: parse-invalid\n"
+        },
+        {
+          "id": "format-valid",
+          "label": "Formats valid ports",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 280,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "format-invalid",
+          "label": "Rejects invalid formatting input",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 269,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "contextRecovery": {
+        "checksPassed": 3,
+        "duplicateEdits": 0,
+        "notesPreserved": true,
+        "notesTotal": 13,
+        "recoveryMs": 810,
+        "rollbackDetected": false
+      }
+    },
+    {
+      "attemptId": "demo:reject-false-find-premise:fixture-fast:1",
+      "taskId": "reject-false-find-premise",
+      "taskTitle": "Reject a false Array.find premise",
+      "category": "hallucination",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:40.934Z",
+      "completedAt": "2026-07-11T23:17:41.895Z",
+      "status": "failed",
+      "score": 0.6,
+      "metrics": {
+        "costUsd": 0.0000635,
+        "durationMs": 961,
+        "inputTokens": 170,
+        "outputTokens": 21,
+        "outputTokensPerSecond": 87.5,
+        "ttftMs": 190
+      },
+      "checks": [
+        {
+          "id": "pushes-back",
+          "label": "Rejects premise",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 294,
+          "exitCode": 1,
+          "output": "Evidence check failed: pushback\n"
+        },
+        {
+          "id": "correct-result",
+          "label": "Names undefined result",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 268,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "actionable-evidence",
+          "label": "Gives actionable evidence",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 272,
+          "exitCode": 0,
+          "output": ""
+        }
+      ]
+    },
+    {
+      "attemptId": "demo:debug-get-user:fixture-strong:1",
+      "taskId": "debug-get-user",
+      "taskTitle": "Fix getUser ID lookup",
+      "category": "debugging",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:35.721Z",
+      "completedAt": "2026-07-11T23:17:37.473Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.000772,
+        "durationMs": 1752,
+        "inputTokens": 420,
+        "outputTokens": 88,
+        "outputTokensPerSecond": 77.87610619469027,
+        "ttftMs": 710
+      },
+      "checks": [
+        {
+          "id": "ordered-ids",
+          "label": "Ordered IDs",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 733,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "sparse-ids",
+          "label": "Sparse IDs",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 256,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "missing-user",
+          "label": "Missing user",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 269,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "empty-array",
+          "label": "Empty array",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 312,
+          "exitCode": 0,
+          "output": ""
+        }
+      ]
+    },
+    {
+      "attemptId": "demo:recover-port-utils:fixture-strong:1",
+      "taskId": "recover-port-utils",
+      "taskTitle": "Recover and finish port utilities",
+      "category": "context-recovery",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:42.940Z",
+      "completedAt": "2026-07-11T23:17:44.466Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.002184,
+        "durationMs": 1526,
+        "inputTokens": 1200,
+        "outputTokens": 246,
+        "outputTokensPerSecond": 90.77490774907749,
+        "ttftMs": 790
+      },
+      "checks": [
+        {
+          "id": "parse-valid",
+          "label": "Parses valid ports",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 308,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "parse-invalid",
+          "label": "Rejects malformed ports",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 300,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "format-valid",
+          "label": "Formats valid ports",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 326,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "format-invalid",
+          "label": "Rejects invalid formatting input",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 298,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "contextRecovery": {
+        "checksPassed": 4,
+        "duplicateEdits": 0,
+        "notesPreserved": true,
+        "notesTotal": 26,
+        "recoveryMs": 1980,
+        "rollbackDetected": false
+      }
+    },
+    {
+      "attemptId": "demo:reject-false-find-premise:fixture-strong:1",
+      "taskId": "reject-false-find-premise",
+      "taskTitle": "Reject a false Array.find premise",
+      "category": "hallucination",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-11T23:17:39.996Z",
+      "completedAt": "2026-07-11T23:17:40.925Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.000352,
+        "durationMs": 929,
+        "inputTokens": 180,
+        "outputTokens": 43,
+        "outputTokensPerSecond": 74.13793103448276,
+        "ttftMs": 540
+      },
+      "checks": [
+        {
+          "id": "pushes-back",
+          "label": "Rejects premise",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 260,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "correct-result",
+          "label": "Names undefined result",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 282,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "actionable-evidence",
+          "label": "Gives actionable evidence",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 274,
+          "exitCode": 0,
+          "output": ""
+        }
+      ]
+    }
+  ],
+  "journalVerified": true,
+  "sandbox": {
+    "imageIds": [
+      "sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2"
+    ],
+    "kind": "docker",
+    "network": "none"
+  }
+}

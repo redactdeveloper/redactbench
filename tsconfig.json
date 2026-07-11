@@ -23,6 +23,8 @@
     "dashboard/**/*.ts",
     "dashboard/**/*.tsx",
     "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "playwright.config.ts",
     "vite.config.ts",
     "vitest.config.ts"
   ]

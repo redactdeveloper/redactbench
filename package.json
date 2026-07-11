@@ -19,6 +19,7 @@
     "dev:dashboard": "vite",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
+    "test:browser": "npm run build && playwright test",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "redactbench": "tsx src/cli.ts"
@@ -31,6 +32,8 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@fontsource/ibm-plex-mono": "5.2.7",
+    "@fontsource/roboto-condensed": "5.2.8",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "yaml": "2.9.0",
@@ -38,11 +41,15 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "^1.61.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.3",
     "eslint": "10.7.0",
+    "jsdom": "29.1.1",
     "tsx": "4.23.0",
     "typescript": "6.0.3",
     "typescript-eslint": "8.63.0",
