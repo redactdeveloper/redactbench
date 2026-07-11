@@ -120,14 +120,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Container получает только временный workspace и read-only evaluator, без API keys и сети.
-- [ ] Timeout, output cap, CPU/memory/PID, cap-drop и no-new-privileges применяются к каждому check.
-- [ ] Pass/fail/error/timeout различаются, а веса нормализуются детерминированно.
+- [x] Container получает только временный workspace и read-only evaluator, без API keys и сети.
+- [x] Timeout, output cap, CPU/memory/PID, cap-drop и no-new-privileges применяются к каждому check.
+- [x] Pass/fail/error/timeout различаются, а веса нормализуются детерминированно.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/evaluator.test.ts tests/security.test.ts`.
-- [ ] Docker integration подтверждает отсутствие сети и запись только в workspace.
+- [x] RED/GREEN: evaluator/security tests passed; полный набор — 40 tests.
+- [x] Docker integration подтвердил отсутствие сети, read-only evaluator и запись только в workspace.
 
 **Зависимости:** Задачи 2–3.
 
