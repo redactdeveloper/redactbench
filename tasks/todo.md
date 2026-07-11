@@ -141,14 +141,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Исходный workspace не изменяется; каждый attempt работает в новой временной копии.
-- [ ] Patch сначала проходит containment и `git apply --check`, затем применяется один раз.
-- [ ] Результат содержит artifacts, provider metrics, check results, score и безопасную ошибку при сбое.
+- [x] Исходный workspace не изменяется; каждый attempt работает в новой временной копии.
+- [x] Patch сначала проходит containment и `git apply --check`, затем применяется один раз.
+- [x] Результат содержит artifacts, provider metrics, check results, score и безопасную ошибку при сбое.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/attempt.test.ts`.
-- [ ] Fixture integration исправляет sample bug и проходит hidden checks в Docker.
+- [x] RED/GREEN: 3 unit tests и отдельный attempt integration test passed.
+- [x] Fixture integration исправляет sample bug и проходит hidden checks в Docker.
 
 **Зависимости:** Задачи 3–6.
 
@@ -158,9 +158,9 @@
 
 ## Контрольная точка после задач 4–7
 
-- [ ] Один настоящий benchmark attempt завершается полным/частичным score.
-- [ ] TTFT, tokens/sec и usage основаны на streaming fixtures.
-- [ ] Host и исходный workspace остаются неизменными.
+- [x] Один настоящий benchmark attempt завершается полным/частичным score.
+- [x] TTFT, tokens/sec и usage основаны на streaming fixtures.
+- [x] Host и исходный workspace остаются неизменными.
 
 ## Задача 8: Добавить журнал, resume и агрегацию
 

@@ -1,4 +1,5 @@
 export type RedactBenchErrorCode =
+  | "ATTEMPT_ERROR"
   | "CHECK_TIMEOUT"
   | "CONFIG_INVALID"
   | "PATCH_REJECTED"

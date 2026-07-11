@@ -67,6 +67,8 @@ export function buildDockerArgs(
     "CI=1",
     "--env",
     "HOME=/tmp",
+    "--env",
+    "REDACTBENCH_RESPONSE_FILE=/workspace/.redactbench/response.txt",
     "--mount",
     `type=bind,src=${workspaceDirectory},dst=/workspace`,
     "--mount",

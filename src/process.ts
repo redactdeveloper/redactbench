@@ -5,6 +5,7 @@ export interface ProcessOptions {
   env?: NodeJS.ProcessEnv;
   maxOutputBytes: number;
   onTerminate?: () => Promise<void> | void;
+  stdin?: Buffer | string;
   timeoutMs: number;
 }
 
@@ -35,8 +36,13 @@ export async function runProcess(
       cwd: options.cwd,
       env: options.env ?? process.env,
       shell: false,
-      stdio: ["ignore", "pipe", "pipe"]
+      stdio: [options.stdin === undefined ? "ignore" : "pipe", "pipe", "pipe"]
     });
+
+    if (options.stdin !== undefined && child.stdin) {
+      child.stdin.on("error", () => undefined);
+      child.stdin.end(options.stdin);
+    }
 
     const terminate = (reason: "output" | "timeout") => {
       if (terminationStarted) {
@@ -62,8 +68,8 @@ export async function runProcess(
       }
     };
 
-    child.stdout.on("data", (chunk: Buffer) => capture(chunk, stdoutChunks));
-    child.stderr.on("data", (chunk: Buffer) => capture(chunk, stderrChunks));
+    child.stdout?.on("data", (chunk: Buffer) => capture(chunk, stdoutChunks));
+    child.stderr?.on("data", (chunk: Buffer) => capture(chunk, stderrChunks));
 
     const timeout = setTimeout(() => terminate("timeout"), options.timeoutMs);
     let spawnError: string | null = null;

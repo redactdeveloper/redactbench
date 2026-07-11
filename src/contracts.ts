@@ -316,6 +316,13 @@ export const AttemptReportSchema = z
     score: ScoreSchema,
     metrics: AttemptMetricsSchema,
     checks: z.array(CheckResultSchema),
+    error: z
+      .object({
+        code: z.string().min(1).max(80),
+        message: z.string().min(1).max(2_048)
+      })
+      .strict()
+      .optional(),
     contextRecovery: ContextRecoveryResultSchema.optional()
   })
   .strict();
