@@ -51,14 +51,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Один и тот же workspace даёт одинаковый prompt hash и стабильный порядок файлов.
-- [ ] Symlink/`..`, слишком большие файлы и denylisted secret names не попадают в prompt.
-- [ ] Parser принимает корректный envelope и отклоняет oversized/ambiguous/unsafe diff.
+- [x] Один и тот же workspace даёт одинаковый prompt hash и стабильный порядок файлов.
+- [x] Symlink/`..`, слишком большие файлы и denylisted secret names не попадают в prompt.
+- [x] Parser принимает корректный envelope и отклоняет oversized/ambiguous/unsafe diff.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/prompt.test.ts tests/response.test.ts`.
-- [ ] Manual fixture snapshot не содержит `evaluator/` и `.env`.
+- [x] RED/GREEN: 11 tests passed; ambiguous duplicate envelope был пойман до GREEN.
+- [x] Fixture snapshot не содержит sibling `evaluator/`, `.env`, private key content или symlink target.
 
 **Зависимости:** Задача 2.
 
@@ -68,9 +68,9 @@
 
 ## Контрольная точка после задач 1–3
 
-- [ ] Все unit-тесты проходят.
-- [ ] Typecheck/lint чистые.
-- [ ] Контракты, prompt hash и response envelope готовы к провайдерам.
+- [x] Все unit-тесты проходят — 25 tests в 4 файлах.
+- [x] Typecheck/lint чистые.
+- [x] Контракты, prompt hash и response envelope готовы к провайдерам.
 
 ## Задача 4: Реализовать SSE transport и OpenAI adapter
 
