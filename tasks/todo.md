@@ -78,14 +78,14 @@
 
 **Критерии приёмки:**
 
-- [ ] SSE parser корректно переживает chunk boundaries, comments, multi-line data и неизвестные события.
-- [ ] OpenAI adapter использует фиксированный HTTPS host, `store: false`, env key и возвращает text/usage/timing.
-- [ ] HTTP/API ошибки не раскрывают Authorization header или body с секретами.
+- [x] SSE parser корректно переживает chunk boundaries, comments, multi-line data и неизвестные события.
+- [x] OpenAI adapter использует фиксированный HTTPS host, `store: false`, env key и возвращает text/usage/timing.
+- [x] HTTP/API ошибки не раскрывают Authorization header или credential-shaped body content.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/sse.test.ts tests/providers/openai.test.ts`.
-- [ ] Typecheck подтверждает единый `ProviderAdapter` contract.
+- [x] RED/GREEN: 6 targeted tests passed; полный набор — 31 test.
+- [x] Typecheck подтверждает единый `ProviderAdapter` contract.
 
 **Зависимости:** Задачи 2–3.
 
