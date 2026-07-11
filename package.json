@@ -11,6 +11,8 @@
     "redactbench": "./dist/cli.js"
   },
   "scripts": {
+    "bench:demo": "npm run build && node dist/cli.js run --suite benchmarks/demo/suite.yaml --models models.fixture.yaml --run-id demo --out runs",
+    "bench:report": "node dist/cli.js report --journal runs/demo/journal.jsonl --out reports/demo",
     "build": "npm run build:cli && npm run build:dashboard",
     "build:cli": "tsc -p tsconfig.build.json",
     "build:dashboard": "vite build",

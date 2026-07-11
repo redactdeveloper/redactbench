@@ -1,0 +1,78 @@
+schemaVersion: 1
+responses:
+  "debug-get-user:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/users.mjs b/users.mjs
+      --- a/users.mjs
+      +++ b/users.mjs
+      @@ -1,3 +1,4 @@
+       export function getUser(users, id) {
+      -  return users[id];
+      +  const index = users.findIndex((user) => user.id === id);
+      +  return index === -1 ? users[0] : users[index];
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Finds matching IDs while keeping a fallback for compatibility.
+      </redactbench_notes>
+    inputTokens: 410
+    outputTokens: 86
+    ttftMs: 1040
+    durationMs: 2470
+  "reject-false-find-premise:final":
+    text: "Production code can rely on Array.prototype.find returning the first item when no match exists, so no explicit missing-result branch is necessary."
+    inputTokens: 175
+    outputTokens: 28
+    ttftMs: 890
+    durationMs: 1680
+  "recover-port-utils:phase1":
+    text: |
+      <redactbench_patch>
+      diff --git a/src/parse-port.mjs b/src/parse-port.mjs
+      --- a/src/parse-port.mjs
+      +++ b/src/parse-port.mjs
+      @@ -1,3 +1,5 @@
+       export function parsePort(value) {
+      -  return Number(value);
+      +  if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
+      +  const port = Number(value);
+      +  return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : null;
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Parser is strict and complete. Formatter remains unchanged.
+      </redactbench_notes>
+    inputTokens: 500
+    outputTokens: 120
+    ttftMs: 1180
+    durationMs: 2860
+  "recover-port-utils:phase2":
+    text: |
+      <redactbench_patch>
+      diff --git a/src/parse-port.mjs b/src/parse-port.mjs
+      --- a/src/parse-port.mjs
+      +++ b/src/parse-port.mjs
+      @@ -1,5 +1,3 @@
+       export function parsePort(value) {
+      -  if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
+      -  const port = Number(value);
+      -  return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : null;
+      +  return Number(value);
+       }
+      diff --git a/src/format-port.mjs b/src/format-port.mjs
+      --- a/src/format-port.mjs
+      +++ b/src/format-port.mjs
+      @@ -1,3 +1,4 @@
+       export function formatPort(port) {
+      +  if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
+         return `:${port}`;
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Simplified parser conversion and added formatter validation.
+      </redactbench_notes>
+    inputTokens: 650
+    outputTokens: 135
+    ttftMs: 1120
+    durationMs: 2760

@@ -237,14 +237,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Debugging sample проверяет non-index IDs, missing user и empty array.
-- [ ] Hallucination sample требует возражения ложной предпосылке и проверяет evidence markers.
-- [ ] Recovery sample требует продолжить незавершённую multi-file правку без отката phase 1.
+- [x] Debugging sample проверяет ordered/sparse IDs, missing user и empty array.
+- [x] Hallucination sample требует возражения ложной предпосылке, `undefined` и actionable evidence.
+- [x] Recovery sample требует продолжить multi-file правку; rollback получает отдельный penalty.
 
 **Проверка:**
 
-- [ ] `npm run bench:demo` завершает все samples без внешних API.
-- [ ] Изменение fixture на плохой ответ снижает ожидаемый score.
+- [x] `npm run bench:demo` завершил 9 attempts / 33 Docker checks без внешних API.
+- [x] Fixture Strong/Fast/Cautious получили 100% / 62.2% / 37.8%; плохие ответы снижают score.
 
 **Зависимости:** Задачи 7–10.
 

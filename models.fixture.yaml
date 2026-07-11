@@ -1,0 +1,29 @@
+schemaVersion: 1
+models:
+  - id: fixture-strong
+    label: Fixture Strong
+    provider: fixture
+    model: fixture-strong-v1
+    fixtureFile: benchmarks/demo/fixtures/strong.yaml
+    maxOutputTokens: 4096
+    pricing:
+      inputUsdPerMillion: 1.00
+      outputUsdPerMillion: 4.00
+  - id: fixture-fast
+    label: Fixture Fast
+    provider: fixture
+    model: fixture-fast-v1
+    fixtureFile: benchmarks/demo/fixtures/fast.yaml
+    maxOutputTokens: 4096
+    pricing:
+      inputUsdPerMillion: 0.25
+      outputUsdPerMillion: 1.00
+  - id: fixture-cautious
+    label: Fixture Cautious
+    provider: fixture
+    model: fixture-cautious-v1
+    fixtureFile: benchmarks/demo/fixtures/cautious.yaml
+    maxOutputTokens: 4096
+    pricing:
+      inputUsdPerMillion: 0.50
+      outputUsdPerMillion: 2.00

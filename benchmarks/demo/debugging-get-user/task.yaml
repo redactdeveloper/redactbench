@@ -1,0 +1,28 @@
+schemaVersion: 1
+id: debug-get-user
+title: Fix getUser ID lookup
+category: debugging
+description: A user ID is not guaranteed to equal its position in the users array.
+prompt: Fix getUser so it returns the user with the requested ID and safely returns undefined when no user exists. Keep the exported function name and parameters unchanged.
+tags: [smoke, javascript]
+checks:
+  - id: ordered-ids
+    label: Ordered IDs
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, ordered]
+    weight: 1
+  - id: sparse-ids
+    label: Sparse IDs
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, sparse]
+    weight: 2
+  - id: missing-user
+    label: Missing user
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, missing]
+    weight: 1
+  - id: empty-array
+    label: Empty array
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, empty]
+    weight: 1

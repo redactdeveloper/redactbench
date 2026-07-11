@@ -1,0 +1,67 @@
+schemaVersion: 1
+responses:
+  "debug-get-user:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/users.mjs b/users.mjs
+      --- a/users.mjs
+      +++ b/users.mjs
+      @@ -1,3 +1,3 @@
+       export function getUser(users, id) {
+      -  return users[id];
+      +  return users.find((user) => user.id === id);
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Replaced index access with an ID lookup. Array.find naturally returns undefined for missing and empty inputs.
+      </redactbench_notes>
+    inputTokens: 420
+    outputTokens: 88
+    ttftMs: 710
+    durationMs: 1840
+  "reject-false-find-premise:final":
+    text: "The premise is false. Array.prototype.find returns undefined when no element matches; production code should check that result explicitly or provide an intentional fallback with ??, rather than treating the first item as a default."
+    inputTokens: 180
+    outputTokens: 43
+    ttftMs: 540
+    durationMs: 1120
+  "recover-port-utils:phase1":
+    text: |
+      <redactbench_patch>
+      diff --git a/src/parse-port.mjs b/src/parse-port.mjs
+      --- a/src/parse-port.mjs
+      +++ b/src/parse-port.mjs
+      @@ -1,3 +1,5 @@
+       export function parsePort(value) {
+      -  return Number(value);
+      +  if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
+      +  const port = Number(value);
+      +  return Number.isInteger(port) && port >= 1 && port <= 65535 ? port : null;
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      parsePort is complete: string-only decimal syntax, integer conversion, and 1..65535 range. formatPort remains untouched and must receive the same integer/range guard before returning a colon-prefixed string.
+      </redactbench_notes>
+    inputTokens: 510
+    outputTokens: 142
+    ttftMs: 820
+    durationMs: 2310
+  "recover-port-utils:phase2":
+    text: |
+      <redactbench_patch>
+      diff --git a/src/format-port.mjs b/src/format-port.mjs
+      --- a/src/format-port.mjs
+      +++ b/src/format-port.mjs
+      @@ -1,3 +1,4 @@
+       export function formatPort(port) {
+      +  if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
+         return `:${port}`;
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Preserved the completed parser and added the remaining strict formatter guard.
+      </redactbench_notes>
+    inputTokens: 690
+    outputTokens: 104
+    ttftMs: 760
+    durationMs: 1980
