@@ -144,6 +144,14 @@ export const TaskSchema = z
       });
     }
 
+    if (task.category === "context-recovery" && task.response.kind !== "patch") {
+      context.addIssue({
+        code: "custom",
+        message: "context-recovery tasks require patch responses",
+        path: ["response", "kind"]
+      });
+    }
+
     const checkIds = new Set<string>();
     task.checks.forEach((check, index) => {
       if (checkIds.has(check.id)) {

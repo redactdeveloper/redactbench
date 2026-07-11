@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { cp, mkdir, rm } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 import type { AttemptOutcome, RunAttemptInput } from "./attempt.js";
@@ -13,9 +14,18 @@ import type {
   Task
 } from "./contracts.js";
 import { TaskSchema } from "./contracts.js";
+import {
+  runContextRecoveryAttempt,
+  type RecoveryPhase1Checkpoint
+} from "./context-recovery.js";
 import { RedactBenchError } from "./errors.js";
-import { completedAttemptIds, Journal } from "./journal.js";
+import {
+  completedAttemptIds,
+  Journal,
+  type JournalPayload
+} from "./journal.js";
 import { createProviderAdapter, type ProviderAdapter } from "./providers/index.js";
+import type { SandboxRunner } from "./sandbox/docker.js";
 import { stableStringify } from "./stable-json.js";
 import { resolveContainedPath } from "./workspace.js";
 
@@ -28,6 +38,7 @@ interface TaskBundle {
 type AttemptExecutor = (input: RunAttemptInput) => Promise<AttemptOutcome>;
 
 export interface RunBenchmarkInput {
+  afterRecoveryPhase1?: (attemptId: string) => Promise<void> | void;
   createAdapter?: (model: ModelConfig) => ProviderAdapter;
   executeAttempt?: AttemptExecutor;
   journalFile: string;
@@ -36,9 +47,15 @@ export interface RunBenchmarkInput {
   now?: () => number;
   repeatCount: number;
   runId: string;
+  sandbox?: SandboxRunner;
   suite: Suite;
   suiteDirectory: string;
 }
+
+type RecoveryPhase1Payload = Extract<
+  JournalPayload,
+  { type: "recovery.phase1.completed" }
+>;
 
 async function loadTasks(suite: Suite, suiteDirectory: string): Promise<TaskBundle[]> {
   const bundles: TaskBundle[] = [];
@@ -135,6 +152,13 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
   }
 
   const completed = completedAttemptIds(journal.entries);
+  const runDirectory = dirname(resolve(input.journalFile));
+  const recoveryStates = new Map<string, RecoveryPhase1Payload>();
+  for (const entry of journal.entries) {
+    if (entry.payload.type === "recovery.phase1.completed") {
+      recoveryStates.set(entry.payload.attemptId, entry.payload);
+    }
+  }
   const expectedAttemptIds = new Set<string>();
   for (const bundle of tasks) {
     for (const model of input.models.models) {
@@ -156,7 +180,66 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
     );
   }
 
-  const executeAttempt = input.executeAttempt ?? runAttempt;
+  const persistRecoveryPhase1 = async (
+    attemptId: string,
+    checkpoint: RecoveryPhase1Checkpoint
+  ) => {
+    const checkpointPath = `recovery/${createHash("sha256")
+      .update(attemptId)
+      .digest("hex")}`;
+    const checkpointDirectory = resolveContainedPath(runDirectory, checkpointPath);
+    await rm(checkpointDirectory, { force: true, recursive: true });
+    await mkdir(dirname(checkpointDirectory), { recursive: true });
+    await cp(checkpoint.workspaceDirectory, checkpointDirectory, {
+      errorOnExist: true,
+      force: false,
+      recursive: true
+    });
+    const payload: RecoveryPhase1Payload = {
+      type: "recovery.phase1.completed",
+      attemptId,
+      checkpointPath,
+      state: {
+        commitSha: checkpoint.commitSha,
+        notes: checkpoint.notes,
+        patch: checkpoint.patch,
+        patchHash: checkpoint.patchHash,
+        promptHash: checkpoint.promptHash,
+        providerResult: checkpoint.providerResult,
+        responseHash: checkpoint.responseHash,
+        snapshotHash: checkpoint.snapshotHash
+      }
+    };
+    await journal.append(payload);
+    recoveryStates.set(attemptId, payload);
+    await input.afterRecoveryPhase1?.(attemptId);
+  };
+
+  const executeAttempt: AttemptExecutor =
+    input.executeAttempt ??
+    ((attemptInput: RunAttemptInput) => {
+      if (attemptInput.task.category !== "context-recovery") {
+        return runAttempt(attemptInput);
+      }
+      const checkpoint = recoveryStates.get(attemptInput.attemptId);
+      if (checkpoint) {
+        return runContextRecoveryAttempt({
+          ...attemptInput,
+          phase1State: {
+            ...checkpoint.state,
+            checkpointDirectory: resolveContainedPath(
+              runDirectory,
+              checkpoint.checkpointPath
+            )
+          }
+        });
+      }
+      return runContextRecoveryAttempt({
+        ...attemptInput,
+        onPhase1Complete: (phase1) =>
+          persistRecoveryPhase1(attemptInput.attemptId, phase1)
+      });
+    });
   const adapterFactory =
     input.createAdapter ??
     ((model: ModelConfig) =>
@@ -182,6 +265,7 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
           attemptId,
           model,
           repeat,
+          ...(input.sandbox ? { sandbox: input.sandbox } : {}),
           task: bundle.task,
           taskDirectory: bundle.directory
         });
@@ -198,6 +282,13 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
           report: outcome.report,
           taskWeight: bundle.weight
         });
+        const recoveryState = recoveryStates.get(attemptId);
+        if (recoveryState) {
+          await rm(
+            resolveContainedPath(runDirectory, recoveryState.checkpointPath),
+            { force: true, recursive: true }
+          );
+        }
         completed.add(attemptId);
       }
     }

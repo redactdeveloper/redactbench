@@ -31,6 +31,8 @@ const SYSTEM_PROMPT = [
 export interface AttemptArtifacts {
   notes: string | null;
   patchHash: string | null;
+  phase1ResponseHash?: string;
+  phase2ResponseHash?: string;
   promptHash: string | null;
   responseHash: string | null;
 }
@@ -52,7 +54,7 @@ export interface RunAttemptInput {
   taskDirectory: string;
 }
 
-function calculateCostUsd(
+export function calculateCostUsd(
   model: ModelConfig,
   providerResult: ProviderResult | null
 ): number | null {

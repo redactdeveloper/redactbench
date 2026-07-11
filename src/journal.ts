@@ -9,7 +9,12 @@ import { dirname } from "node:path";
 
 import { z } from "zod";
 
-import { AttemptReportSchema, BenchmarkCategorySchema, ProviderNameSchema } from "./contracts.js";
+import {
+  AttemptReportSchema,
+  BenchmarkCategorySchema,
+  ProviderNameSchema,
+  safeRelativePathSchema
+} from "./contracts.js";
 import { RedactBenchError } from "./errors.js";
 import { stableStringify } from "./stable-json.js";
 
@@ -60,6 +65,8 @@ const AttemptCompletedSchema = z
       .object({
         notes: z.string().max(32_768).nullable(),
         patchHash: HexHashSchema.nullable(),
+        phase1ResponseHash: HexHashSchema.optional(),
+        phase2ResponseHash: HexHashSchema.optional(),
         promptHash: HexHashSchema.nullable(),
         responseHash: HexHashSchema.nullable()
       })
@@ -67,6 +74,53 @@ const AttemptCompletedSchema = z
     imageIds: z.array(z.string().min(1).max(300)),
     report: AttemptReportSchema,
     taskWeight: z.number().positive().max(100)
+  })
+  .strict();
+
+const ProviderResultSchema = z
+  .object({
+    model: z.string().min(1).max(160),
+    provider: ProviderNameSchema,
+    providerRequestId: z.string().max(300).nullable(),
+    text: z.string().min(1).max(1_048_576),
+    timing: z
+      .object({
+        completedAt: DateTimeSchema,
+        durationMs: z.number().finite().nonnegative(),
+        generationMs: z.number().finite().nonnegative(),
+        outputTokensPerSecond: z.number().finite().nonnegative().nullable(),
+        startedAt: DateTimeSchema,
+        ttftMs: z.number().finite().nonnegative()
+      })
+      .strict(),
+    usage: z
+      .object({
+        cachedInputTokens: z.number().int().nonnegative(),
+        inputTokens: z.number().int().nonnegative(),
+        outputTokens: z.number().int().nonnegative()
+      })
+      .strict()
+      .nullable()
+  })
+  .strict();
+
+const RecoveryPhase1CompletedSchema = z
+  .object({
+    type: z.literal("recovery.phase1.completed"),
+    attemptId: z.string().min(1).max(240),
+    checkpointPath: safeRelativePathSchema(),
+    state: z
+      .object({
+        commitSha: z.string().regex(/^[a-f0-9]{40,64}$/),
+        notes: z.string().min(1).max(32_768),
+        patch: z.string().min(1).max(1_048_576),
+        patchHash: HexHashSchema,
+        promptHash: HexHashSchema,
+        providerResult: ProviderResultSchema,
+        responseHash: HexHashSchema,
+        snapshotHash: HexHashSchema
+      })
+      .strict()
   })
   .strict();
 
@@ -81,6 +135,7 @@ const RunCompletedSchema = z
 export const JournalPayloadSchema = z.discriminatedUnion("type", [
   RunStartedSchema,
   AttemptCompletedSchema,
+  RecoveryPhase1CompletedSchema,
   RunCompletedSchema
 ]);
 

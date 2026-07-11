@@ -189,14 +189,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Вторая фаза не получает сообщения/скрытое состояние первой, кроме разрешённых repo/log/notes/task artifacts.
-- [ ] Уже корректное изменение сохраняется; повтор, rollback и invalidation отмечаются измеримыми penalties.
-- [ ] Финальный score использует те же hidden checks, а recovery time хранится отдельно.
+- [x] Вторая фаза не получает сообщения/скрытое состояние первой, кроме разрешённых repo/log/notes/task artifacts.
+- [x] Уже корректное изменение сохраняется; повтор, rollback и invalidation отмечаются измеримыми penalties.
+- [x] Финальный score использует те же hidden checks, а recovery time хранится отдельно.
 
 **Проверка:**
 
-- [ ] RED/GREEN: `npm test -- tests/context-recovery.test.ts`.
-- [ ] Fixture spy подтверждает ровно два независимых provider requests.
+- [x] RED/GREEN: core + crash-resume Context Recovery tests passed.
+- [x] Fixture spy подтверждает два независимых requests; fault-injection resume — phase 1 не повторяется.
 
 **Зависимости:** Задачи 7–8.
 
