@@ -1,0 +1,21 @@
+node_modules/
+dist/
+coverage/
+
+# Benchmark artifacts can contain model output and repository snapshots.
+runs/
+reports/
+.redactbench/
+tmp/
+
+# Credentials and machine-local configuration.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Editor and OS state.
+.DS_Store
+*.swp
+*.swo

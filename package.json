@@ -1,0 +1,50 @@
+{
+  "name": "redactbench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A reproducible direct-provider coding model benchmark with isolated hidden checks and context recovery.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "redactbench": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "npm run build:cli && npm run build:dashboard",
+    "build:cli": "tsc -p tsconfig.build.json",
+    "build:dashboard": "vite build",
+    "dev:dashboard": "vite",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "redactbench": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "benchmark",
+    "coding-models",
+    "llm",
+    "evals"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "yaml": "2.9.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.1.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "eslint": "10.7.0",
+    "tsx": "4.23.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.63.0",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
+  }
+}

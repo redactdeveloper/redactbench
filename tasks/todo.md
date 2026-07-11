@@ -6,16 +6,16 @@
 
 **Критерии приёмки:**
 
-- [ ] `npm ci` воспроизводимо устанавливает lockfile без секретов и generated output.
-- [ ] `npm test`, `npm run lint`, `npm run typecheck` и пустая production-сборка доступны как отдельные команды.
-- [ ] `.env`, ключи, runs/reports и временные workspace исключены из Git.
+- [x] `npm ci` воспроизводимо устанавливает lockfile без секретов и generated output.
+- [x] `npm test`, `npm run lint`, `npm run typecheck` и пустая production-сборка доступны как отдельные команды.
+- [x] `.env`, ключи, runs/reports и временные workspace исключены из Git.
 
 **Проверка:**
 
-- [ ] `npm test`
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] `npm audit --audit-level=high`
+- [x] `npm test` — 1 test passed.
+- [x] `npm run lint` — 0 warnings/errors.
+- [x] `npm run typecheck` — passed.
+- [x] `npm audit --audit-level=high` — 0 vulnerabilities.
 
 **Зависимости:** Нет.
 
