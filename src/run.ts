@@ -7,6 +7,7 @@ import { runAttempt } from "./attempt.js";
 import { aggregateJournal } from "./aggregate.js";
 import { loadYamlConfig } from "./config.js";
 import type {
+  AttemptReport,
   ModelConfig,
   ModelConfigFile,
   Report,
@@ -37,6 +38,34 @@ interface TaskBundle {
 
 type AttemptExecutor = (input: RunAttemptInput) => Promise<AttemptOutcome>;
 
+export type RunProgressEvent =
+  | {
+      completedAttempts: number;
+      remainingAttempts: number;
+      resumed: boolean;
+      runId: string;
+      totalAttempts: number;
+      type: "run.ready";
+    }
+  | {
+      attemptId: string;
+      completedAttempts: number;
+      modelId: string;
+      modelLabel: string;
+      score: number;
+      status: AttemptReport["status"];
+      taskId: string;
+      taskTitle: string;
+      totalAttempts: number;
+      type: "attempt.completed";
+    }
+  | {
+      completedAttempts: number;
+      runId: string;
+      totalAttempts: number;
+      type: "run.completed";
+    };
+
 export interface RunBenchmarkInput {
   afterRecoveryPhase1?: (attemptId: string) => Promise<void> | void;
   concurrency?: number;
@@ -46,6 +75,7 @@ export interface RunBenchmarkInput {
   modelConfigDirectory: string;
   models: ModelConfigFile;
   now?: () => number;
+  onProgress?: (event: RunProgressEvent) => Promise<void> | void;
   repeatCount: number;
   runId: string;
   sandbox?: SandboxRunner;
@@ -234,6 +264,27 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
     );
   }
 
+  const totalAttempts = expectedAttemptIds.size;
+  let completedAttempts = [...expectedAttemptIds].filter((attemptId) =>
+    completed.has(attemptId)
+  ).length;
+  let progressQueue = Promise.resolve();
+  const emitProgress = (event: RunProgressEvent): Promise<void> => {
+    if (!input.onProgress) return Promise.resolve();
+    progressQueue = progressQueue.then(async () => {
+      await input.onProgress?.(event);
+    });
+    return progressQueue;
+  };
+  await emitProgress({
+    completedAttempts,
+    remainingAttempts: totalAttempts - completedAttempts,
+    resumed: existingStarts.length > 0,
+    runId: input.runId,
+    totalAttempts,
+    type: "run.ready"
+  });
+
   const persistRecoveryPhase1 = async (
     attemptId: string,
     checkpoint: RecoveryPhase1Checkpoint
@@ -351,6 +402,20 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
         report: outcome.report,
         taskWeight: bundle.weight
       });
+      completed.add(attemptId);
+      completedAttempts += 1;
+      await emitProgress({
+        attemptId,
+        completedAttempts,
+        modelId: model.id,
+        modelLabel: model.label,
+        score: outcome.report.score,
+        status: outcome.report.status,
+        taskId: bundle.task.id,
+        taskTitle: bundle.task.title,
+        totalAttempts,
+        type: "attempt.completed"
+      });
       const recoveryState = recoveryStates.get(attemptId);
       if (recoveryState) {
         await rm(
@@ -358,7 +423,6 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
           { force: true, recursive: true }
         );
       }
-      completed.add(attemptId);
     }
   };
   await Promise.all(Array.from({ length: concurrency }, () => worker()));
@@ -370,6 +434,13 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
       runId: input.runId
     });
   }
+
+  await emitProgress({
+    completedAttempts,
+    runId: input.runId,
+    totalAttempts,
+    type: "run.completed"
+  });
 
   return aggregateJournal(journal.entries, new Date(now()).toISOString());
 }

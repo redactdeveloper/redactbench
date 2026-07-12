@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { AttemptOutcome } from "../src/attempt.js";
 import { ModelConfigFileSchema, SuiteSchema, TaskSchema } from "../src/contracts.js";
-import { runBenchmark } from "../src/run.js";
+import { runBenchmark, type RunProgressEvent } from "../src/run.js";
 
 describe("runBenchmark", () => {
   it("resumes without executing a completed attempt twice", async () => {
@@ -82,6 +82,13 @@ describe("runBenchmark", () => {
     };
     const executeAttempt = vi.fn().mockResolvedValue(outcome);
     const journalFile = join(directory, "run", "journal.jsonl");
+    const firstProgress = vi.fn(async (event: RunProgressEvent) => {
+      if (event.type === "attempt.completed") {
+        expect(await readFile(journalFile, "utf8"))
+          .toContain('"type":"attempt.completed"');
+      }
+    });
+    const resumedProgress = vi.fn();
     const common = {
       executeAttempt,
       journalFile,
@@ -93,12 +100,56 @@ describe("runBenchmark", () => {
       suiteDirectory: directory
     };
 
-    const first = await runBenchmark(common);
-    const resumed = await runBenchmark(common);
+    const first = await runBenchmark({ ...common, onProgress: firstProgress });
+    const resumed = await runBenchmark({ ...common, onProgress: resumedProgress });
 
     expect(executeAttempt).toHaveBeenCalledOnce();
     expect(first.attempts).toHaveLength(1);
     expect(resumed.attempts).toHaveLength(1);
     expect(resumed.leaderboard[0]?.score).toBe(1);
+    expect(firstProgress.mock.calls.map(([event]) => event)).toEqual([
+      {
+        completedAttempts: 0,
+        remainingAttempts: 1,
+        resumed: false,
+        runId: "run-demo",
+        totalAttempts: 1,
+        type: "run.ready"
+      },
+      {
+        attemptId: "run-demo:debug:fixture:1",
+        completedAttempts: 1,
+        modelId: "fixture",
+        modelLabel: "Fixture",
+        score: 1,
+        status: "passed",
+        taskId: "debug",
+        taskTitle: "Debug",
+        totalAttempts: 1,
+        type: "attempt.completed"
+      },
+      {
+        completedAttempts: 1,
+        runId: "run-demo",
+        totalAttempts: 1,
+        type: "run.completed"
+      }
+    ]);
+    expect(resumedProgress.mock.calls.map(([event]) => event)).toEqual([
+      {
+        completedAttempts: 1,
+        remainingAttempts: 0,
+        resumed: true,
+        runId: "run-demo",
+        totalAttempts: 1,
+        type: "run.ready"
+      },
+      {
+        completedAttempts: 1,
+        runId: "run-demo",
+        totalAttempts: 1,
+        type: "run.completed"
+      }
+    ]);
   });
 });

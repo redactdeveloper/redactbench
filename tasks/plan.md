@@ -390,6 +390,18 @@ typed field roster
 - `--dry-run` выполняет полный безопасный preflight и показывает план без запуска harness containers и без model/API calls.
 - Ошибка любого preflight происходит до первого model request; успешный run оставляет journal, JSON report и статический dashboard в одном run directory.
 
+### Задача 30: Наблюдаемый долгий run
+
+- Run engine публикует typed progress events при готовности очереди, после durable `attempt.completed` и после полного завершения.
+- Первый event показывает `completed/total` и отличает новый run от resume; завершённые attempts повторно не исполняются и не репортятся как новые.
+- CLI печатает только model/task labels, status и score; prompt, response, provider errors и credentials в progress output не попадают.
+- `--dry-run` остаётся без attempt-progress и без model/API calls.
+
+### Следующие инкременты после задачи 30
+
+- Задача 31: автоматически предлагать/возобновлять последний незавершённый target run без смешивания конфигураций.
+- Задача 32: добавить явный budget envelope и fail-closed egress readiness для платных/adversarial runs.
+
 ## Definition of Done поверхности
 
 - [ ] Manifest содержит ровно 11 согласованных entrants и не содержит secrets.
@@ -398,3 +410,4 @@ typed field roster
 - [ ] Hidden evaluator недоступен harness container.
 - [ ] Contract/component/security tests, typecheck, lint, build и browser smoke чистые.
 - [ ] `redactbench start --dry-run` доказывает готовность orchestration без model/API calls.
+- [ ] Долгий `redactbench start` показывает durable progress и корректный resume count.
