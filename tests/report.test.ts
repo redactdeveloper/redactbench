@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -49,5 +49,41 @@ describe("report command", () => {
       journalVerified: true,
       run: { id: "demo" }
     });
+  });
+
+  it("rejects an output symlink before modifying its target", async () => {
+    const root = await mkdtemp(join(tmpdir(), "redactbench-report-link-"));
+    const dashboard = join(root, "dashboard");
+    const target = join(root, "target");
+    const output = join(root, "output-link");
+    await mkdir(join(dashboard, "assets"), { recursive: true });
+    await mkdir(join(target, "assets"), { recursive: true });
+    await writeFile(join(dashboard, "index.html"), "dashboard");
+    await writeFile(join(target, "index.html"), "target sentinel");
+    await writeFile(join(target, "assets", "sentinel.js"), "sentinel");
+    await symlink(target, output, "dir");
+
+    const journalFile = join(root, "journal.jsonl");
+    const journal = await Journal.open(journalFile);
+    await journal.append({
+      type: "run.started",
+      configHash: "b".repeat(64),
+      run: {
+        id: "demo",
+        title: "Demo",
+        suiteId: "demo",
+        scorerVersion: "1.0.0",
+        startedAt: "2026-07-12T00:00:00.000Z",
+        repeatCount: 1,
+        models: [],
+        tasks: []
+      }
+    });
+
+    await expect(
+      reportCommand(journalFile, output, "2026-07-12T00:00:01.000Z", dashboard)
+    ).rejects.toMatchObject({ code: "CONFIG_INVALID" });
+    expect(await readFile(join(target, "index.html"), "utf8")).toBe("target sentinel");
+    expect(await readFile(join(target, "assets", "sentinel.js"), "utf8")).toBe("sentinel");
   });
 });

@@ -102,7 +102,7 @@ const ContextRecoveryConfigSchema = z
     phase1Prompt: PromptSchema,
     phase2Prompt: PromptSchema.optional(),
     maxPhase1OutputTokens: z.number().int().min(64).max(32_768).default(2_048),
-    notesRequired: z.boolean().default(true)
+    notesRequired: z.literal(true).default(true)
   })
   .strict();
 

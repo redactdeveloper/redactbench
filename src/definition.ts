@@ -11,7 +11,7 @@ import {
 } from "./contracts.js";
 import { RedactBenchError } from "./errors.js";
 import { FixtureFileSchema } from "./providers/fixture.js";
-import { resolveContainedPath } from "./workspace.js";
+import { resolveContainedPath, resolveContainedRealPath } from "./workspace.js";
 
 export interface LoadedTask {
   directory: string;
@@ -62,7 +62,11 @@ export async function loadBenchmarkDefinition(
 
   for (const suiteTask of suite.tasks) {
     const manifest = resolveContainedPath(suiteDirectory, suiteTask.manifest);
-    const task = await loadYamlConfig(manifest, TaskSchema);
+    const realManifest = await resolveContainedRealPath(
+      suiteDirectory,
+      suiteTask.manifest
+    );
+    const task = await loadYamlConfig(realManifest, TaskSchema);
     if (taskIds.has(task.id)) {
       throw new RedactBenchError(
         "CONFIG_INVALID",
@@ -70,13 +74,13 @@ export async function loadBenchmarkDefinition(
       );
     }
     taskIds.add(task.id);
-    const directory = dirname(manifest);
+    const directory = dirname(realManifest);
     await requireDirectory(
-      resolveContainedPath(directory, task.workspace),
+      await resolveContainedRealPath(directory, task.workspace),
       `${task.id} workspace`
     );
     await requireDirectory(
-      resolveContainedPath(directory, task.evaluator),
+      await resolveContainedRealPath(directory, task.evaluator),
       `${task.id} evaluator`
     );
     tasks.push({ directory, manifest, task, weight: suiteTask.weight });
@@ -84,7 +88,7 @@ export async function loadBenchmarkDefinition(
 
   for (const model of models.models) {
     if (model.provider === "fixture") {
-      const fixtureFile = resolveContainedPath(
+      const fixtureFile = await resolveContainedRealPath(
         modelConfigDirectory,
         model.fixtureFile
       );

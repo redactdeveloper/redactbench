@@ -1,8 +1,8 @@
 import { createServer, type Server } from "node:http";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, realpath, stat } from "node:fs/promises";
 import { extname, resolve } from "node:path";
 
-import { resolveContainedPath } from "./workspace.js";
+import { resolveContainedRealPath } from "./workspace.js";
 
 const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".css": "text/css; charset=utf-8",
@@ -31,7 +31,7 @@ export async function serveReport(
   reportDirectory: string,
   port: number
 ): Promise<{ server: Server; url: string }> {
-  const root = resolve(reportDirectory);
+  const root = await realpath(resolve(reportDirectory));
   const server = createServer(async (request, response) => {
     try {
       if (request.method !== "GET" && request.method !== "HEAD") {
@@ -42,7 +42,7 @@ export async function serveReport(
       const url = new URL(request.url ?? "/", "http://127.0.0.1");
       const decoded = decodeURIComponent(url.pathname);
       const relative = decoded === "/" ? "index.html" : decoded.replace(/^\/+/, "");
-      const file = resolveContainedPath(root, relative);
+      const file = await resolveContainedRealPath(root, relative);
       const fileStat = await stat(file);
       if (!fileStat.isFile()) {
         throw new Error("not a file");

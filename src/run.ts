@@ -27,7 +27,7 @@ import {
 import { createProviderAdapter, type ProviderAdapter } from "./providers/index.js";
 import type { SandboxRunner } from "./sandbox/docker.js";
 import { stableStringify } from "./stable-json.js";
-import { resolveContainedPath } from "./workspace.js";
+import { resolveContainedPath, resolveContainedRealPath } from "./workspace.js";
 
 interface TaskBundle {
   directory: string;
@@ -63,7 +63,10 @@ async function loadTasks(suite: Suite, suiteDirectory: string): Promise<TaskBund
   const bundles: TaskBundle[] = [];
   const ids = new Set<string>();
   for (const suiteTask of suite.tasks) {
-    const manifest = resolveContainedPath(suiteDirectory, suiteTask.manifest);
+    const manifest = await resolveContainedRealPath(
+      suiteDirectory,
+      suiteTask.manifest
+    );
     const task = await loadYamlConfig(manifest, TaskSchema);
     if (ids.has(task.id)) {
       throw new RedactBenchError(
@@ -268,7 +271,7 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
 
   const executeAttempt: AttemptExecutor =
     input.executeAttempt ??
-    ((attemptInput: RunAttemptInput) => {
+    (async (attemptInput: RunAttemptInput) => {
       if (attemptInput.task.category !== "context-recovery") {
         return runAttempt(attemptInput);
       }
@@ -278,7 +281,7 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
           ...attemptInput,
           phase1State: {
             ...checkpoint.state,
-            checkpointDirectory: resolveContainedPath(
+            checkpointDirectory: await resolveContainedRealPath(
               runDirectory,
               checkpoint.checkpointPath
             )
@@ -321,41 +324,41 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
       }
       const { bundle, model, repeat } = job;
       const attemptId = `${input.runId}:${bundle.task.id}:${model.id}:${repeat}`;
-        let adapter = adapters.get(model.id);
-        if (!adapter) {
-          adapter = adapterFactory(model);
-          adapters.set(model.id, adapter);
-        }
-        const outcome = await executeAttempt({
-          adapter,
-          attemptId,
-          model,
-          repeat,
-          ...(input.sandbox ? { sandbox: input.sandbox } : {}),
-          task: bundle.task,
-          taskDirectory: bundle.directory
-        });
-        if (outcome.report.attemptId !== attemptId) {
-          throw new RedactBenchError(
-            "JOURNAL_INVALID",
-            `attempt returned an unexpected id: ${outcome.report.attemptId}`
-          );
-        }
-        await journal.append({
-          type: "attempt.completed",
-          artifacts: outcome.artifacts,
-          imageIds: outcome.imageIds,
-          report: outcome.report,
-          taskWeight: bundle.weight
-        });
-        const recoveryState = recoveryStates.get(attemptId);
-        if (recoveryState) {
-          await rm(
-            resolveContainedPath(runDirectory, recoveryState.checkpointPath),
-            { force: true, recursive: true }
-          );
-        }
-        completed.add(attemptId);
+      let adapter = adapters.get(model.id);
+      if (!adapter) {
+        adapter = adapterFactory(model);
+        adapters.set(model.id, adapter);
+      }
+      const outcome = await executeAttempt({
+        adapter,
+        attemptId,
+        model,
+        repeat,
+        ...(input.sandbox ? { sandbox: input.sandbox } : {}),
+        task: bundle.task,
+        taskDirectory: bundle.directory
+      });
+      if (outcome.report.attemptId !== attemptId) {
+        throw new RedactBenchError(
+          "JOURNAL_INVALID",
+          `attempt returned an unexpected id: ${outcome.report.attemptId}`
+        );
+      }
+      await journal.append({
+        type: "attempt.completed",
+        artifacts: outcome.artifacts,
+        imageIds: outcome.imageIds,
+        report: outcome.report,
+        taskWeight: bundle.weight
+      });
+      const recoveryState = recoveryStates.get(attemptId);
+      if (recoveryState) {
+        await rm(
+          resolveContainedPath(runDirectory, recoveryState.checkpointPath),
+          { force: true, recursive: true }
+        );
+      }
+      completed.add(attemptId);
     }
   };
   await Promise.all(Array.from({ length: concurrency }, () => worker()));

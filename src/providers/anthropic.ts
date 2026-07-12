@@ -26,11 +26,22 @@ const MessageStartSchema = z
     type: z.literal("message_start"),
     message: z
       .object({
-        id: z.string(),
-        model: z.string(),
+        id: z.string().min(1).max(300),
+        model: z.string().min(1).max(160),
         usage: z
           .object({
-            cache_read_input_tokens: z.number().int().nonnegative().default(0),
+            cache_creation_input_tokens: z
+              .number()
+              .int()
+              .nonnegative()
+              .nullable()
+              .default(0),
+            cache_read_input_tokens: z
+              .number()
+              .int()
+              .nonnegative()
+              .nullable()
+              .default(0),
             input_tokens: z.number().int().nonnegative(),
             output_tokens: z.number().int().nonnegative()
           })
@@ -157,9 +168,16 @@ export function createAnthropicAdapter(
           }
           providerRequestId = event.data.message.id;
           responseModel = event.data.message.model;
+          const cachedInputTokens =
+            event.data.message.usage.cache_read_input_tokens ?? 0;
+          const cacheCreationInputTokens =
+            event.data.message.usage.cache_creation_input_tokens ?? 0;
           usage = {
-            cachedInputTokens: event.data.message.usage.cache_read_input_tokens,
-            inputTokens: event.data.message.usage.input_tokens,
+            cachedInputTokens,
+            inputTokens:
+              event.data.message.usage.input_tokens +
+              cachedInputTokens +
+              cacheCreationInputTokens,
             outputTokens: event.data.message.usage.output_tokens
           };
         } else if (baseEvent.data.type === "content_block_delta") {

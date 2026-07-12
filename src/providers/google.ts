@@ -21,8 +21,8 @@ const DEFAULT_MAX_RESPONSE_BYTES = 4_194_304;
 
 const GoogleChunkSchema = z
   .object({
-    responseId: z.string().optional(),
-    modelVersion: z.string().optional(),
+    responseId: z.string().min(1).max(300).optional(),
+    modelVersion: z.string().min(1).max(160).optional(),
     candidates: z
       .array(
         z

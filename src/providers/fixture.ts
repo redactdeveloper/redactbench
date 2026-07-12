@@ -1,4 +1,4 @@
-import { resolve, sep } from "node:path";
+import { resolve } from "node:path";
 
 import { z } from "zod";
 
@@ -11,6 +11,7 @@ import type {
   ProviderDependencies,
   ProviderResult
 } from "./types.js";
+import { resolveContainedRealPath } from "../workspace.js";
 
 const FixtureResponseSchema = z
   .object({
@@ -47,10 +48,6 @@ export function createFixtureAdapter(
 ): ProviderAdapter {
   const now = dependencies.now ?? Date.now;
   const baseDirectory = resolve(dependencies.baseDirectory);
-  const fixturePath = resolve(baseDirectory, modelConfig.fixtureFile);
-  if (fixturePath !== baseDirectory && !fixturePath.startsWith(`${baseDirectory}${sep}`)) {
-    throw providerError("fixture file escapes its configured base directory");
-  }
 
   let fixturePromise: Promise<z.infer<typeof FixtureFileSchema>> | null = null;
 
@@ -63,7 +60,10 @@ export function createFixtureAdapter(
         throw providerError("fixtureResponseKey is required");
       }
 
-      fixturePromise ??= loadYamlConfig(fixturePath, FixtureFileSchema);
+      fixturePromise ??= resolveContainedRealPath(baseDirectory, modelConfig.fixtureFile)
+        .then((containedFixturePath) =>
+          loadYamlConfig(containedFixturePath, FixtureFileSchema)
+        );
       const fixture = await fixturePromise;
       const response = fixture.responses[request.fixtureResponseKey];
       if (!response) {

@@ -1,4 +1,4 @@
-import { cp, chmod, mkdir, mkdtemp, readdir, rm, stat } from "node:fs/promises";
+import { cp, chmod, mkdir, mkdtemp, readdir, realpath, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve, sep } from "node:path";
 
@@ -20,6 +20,39 @@ export function resolveContainedPath(baseDirectory: string, relativePath: string
     );
   }
   return candidate;
+}
+
+export async function resolveContainedRealPath(
+  baseDirectory: string,
+  relativePath: string
+): Promise<string> {
+  const candidate = resolveContainedPath(baseDirectory, relativePath);
+  try {
+    const [base, resolvedCandidate] = await Promise.all([
+      realpath(resolve(baseDirectory)),
+      realpath(candidate)
+    ]);
+    if (
+      resolvedCandidate !== base &&
+      !resolvedCandidate.startsWith(`${base}${sep}`)
+    ) {
+      throw new RedactBenchError(
+        "CONFIG_INVALID",
+        `resolved path escapes its project directory: ${relativePath}`
+      );
+    }
+    return resolvedCandidate;
+  } catch (error) {
+    if (error instanceof RedactBenchError) {
+      throw error;
+    }
+    throw new RedactBenchError(
+      "CONFIG_INVALID",
+      `path could not be resolved inside its project directory: ${relativePath}`,
+      [],
+      error
+    );
+  }
 }
 
 async function assertCopyableTree(directory: string, relative = ""): Promise<void> {

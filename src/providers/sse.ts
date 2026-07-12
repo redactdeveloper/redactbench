@@ -87,6 +87,7 @@ export async function* readSseEvents(
   let totalBytes = 0;
   let eventName = "message";
   let dataLines: string[] = [];
+  let streamCompleted = false;
 
   const parseLine = (line: string): SseEvent | null => {
     if (line === "") {
@@ -123,6 +124,7 @@ export async function* readSseEvents(
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
+        streamCompleted = true;
         buffer += decoder.decode();
         break;
       }
@@ -163,6 +165,9 @@ export async function* readSseEvents(
       yield finalEvent;
     }
   } finally {
+    if (!streamCompleted) {
+      await reader.cancel().catch(() => undefined);
+    }
     reader.releaseLock();
   }
 }

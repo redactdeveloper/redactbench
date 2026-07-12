@@ -66,6 +66,9 @@ test("renders real report data without browser errors or page overflow", async (
 
   await mkdir("tmp/qa", { recursive: true });
   await page.screenshot({ path: `tmp/qa/dashboard-${testInfo.project.name}.png` });
+  if (testInfo.project.name === "mobile") {
+    await page.screenshot({ fullPage: true, path: "tmp/qa/dashboard-mobile-full.png" });
+  }
 
   await page.getByRole("button", { exact: true, name: "Fixture Fast" }).click();
   await expect(page.getByLabel("Overall score: 62.2%")).toBeVisible();

@@ -31,8 +31,8 @@ const OpenAiCreatedSchema = z
     type: z.literal("response.created"),
     response: z
       .object({
-        id: z.string().optional(),
-        model: z.string().optional()
+        id: z.string().min(1).max(300).optional(),
+        model: z.string().min(1).max(160).optional()
       })
       .passthrough()
   })
@@ -42,8 +42,8 @@ const OpenAiCompletedSchema = z
     type: z.literal("response.completed"),
     response: z
       .object({
-        id: z.string().optional(),
-        model: z.string().optional(),
+        id: z.string().min(1).max(300).optional(),
+        model: z.string().min(1).max(160).optional(),
         usage: z
           .object({
             input_tokens: z.number().int().nonnegative(),

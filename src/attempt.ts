@@ -18,7 +18,7 @@ import type { SandboxRunner } from "./sandbox/docker.js";
 import { runDockerCheck } from "./sandbox/docker.js";
 import {
   createIsolatedWorkspace,
-  resolveContainedPath,
+  resolveContainedRealPath,
   type IsolatedWorkspace
 } from "./workspace.js";
 
@@ -139,14 +139,10 @@ export async function runAttempt(input: RunAttemptInput): Promise<AttemptOutcome
   let attemptError: { code: string; message: string } | undefined;
 
   try {
-    const workspaceDirectory = resolveContainedPath(
-      input.taskDirectory,
-      input.task.workspace
-    );
-    const evaluatorDirectory = resolveContainedPath(
-      input.taskDirectory,
-      input.task.evaluator
-    );
+    const [workspaceDirectory, evaluatorDirectory] = await Promise.all([
+      resolveContainedRealPath(input.taskDirectory, input.task.workspace),
+      resolveContainedRealPath(input.taskDirectory, input.task.evaluator)
+    ]);
     const snapshot = await snapshotWorkspace(workspaceDirectory);
     artifacts.promptHash = snapshot.hash;
     const prompt = buildTaskPrompt(input.task, snapshot);

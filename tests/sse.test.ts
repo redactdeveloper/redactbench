@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { RedactBenchError } from "../src/errors.js";
 import { readSseEvents, requireOkProviderResponse } from "../src/providers/sse.js";
@@ -43,6 +43,25 @@ describe("readSseEvents", () => {
       },
       { data: "[DONE]", event: "message" }
     ]);
+  });
+
+  it("cancels the response body when the consumer stops early", async () => {
+    const cancel = vi.fn();
+    const encoder = new TextEncoder();
+    const response = new Response(
+      new ReadableStream<Uint8Array>({
+        cancel,
+        start(controller) {
+          controller.enqueue(encoder.encode("data: first\n\ndata: second\n\n"));
+        }
+      })
+    );
+
+    const events = readSseEvents(response, { maxBytes: 1_024 });
+    await events.next();
+    await events.return(undefined);
+
+    expect(cancel).toHaveBeenCalledOnce();
   });
 
   it("rejects a stream that exceeds its byte cap", async () => {

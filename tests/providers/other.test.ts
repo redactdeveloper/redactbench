@@ -53,6 +53,7 @@ describe("Anthropic adapter", () => {
             id: "msg_123",
             model: "claude-example",
             usage: {
+              cache_creation_input_tokens: 5,
               cache_read_input_tokens: 7,
               input_tokens: 30,
               output_tokens: 1
@@ -93,7 +94,7 @@ describe("Anthropic adapter", () => {
       providerRequestId: "msg_123",
       text: "Hello Claude",
       timing: { durationMs: 1_000, generationMs: 700, ttftMs: 300 },
-      usage: { cachedInputTokens: 7, inputTokens: 30, outputTokens: 12 }
+      usage: { cachedInputTokens: 7, inputTokens: 42, outputTokens: 12 }
     });
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(url).toBe("https://api.anthropic.com/v1/messages");

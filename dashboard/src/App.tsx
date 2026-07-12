@@ -32,6 +32,13 @@ function average(values: Array<number | null>): number | null {
   return measured.length === 0 ? null : measured.reduce((sum, value) => sum + value, 0) / measured.length;
 }
 
+function totalKnownCost(attempts: Report["attempts"]): number | null {
+  if (attempts.length === 0 || attempts.some((attempt) => attempt.metrics.costUsd === null)) {
+    return null;
+  }
+  return attempts.reduce((sum, attempt) => sum + (attempt.metrics.costUsd ?? 0), 0);
+}
+
 function runLabel(report: Report): string {
   const day = report.run.startedAt.slice(0, 10);
   return `Run ${day} / ${report.run.id}`;
@@ -150,20 +157,19 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
         score: isFiltered ? average(attempts.map((attempt) => attempt.score)) : model.score,
         ttft: isFiltered ? average(attempts.map((attempt) => attempt.metrics.ttftMs)) : model.metrics.avgTtftMs,
         speed: isFiltered ? average(attempts.map((attempt) => attempt.metrics.outputTokensPerSecond)) : model.metrics.outputTokensPerSecond,
-        cost: isFiltered
-          ? attempts.reduce<number | null>((sum, attempt) => attempt.metrics.costUsd === null ? sum : (sum ?? 0) + attempt.metrics.costUsd, null)
-          : model.metrics.totalCostUsd
+        cost: isFiltered ? totalKnownCost(attempts) : model.metrics.totalCostUsd
       };
     });
     const compare = (left: LeaderboardRow, right: LeaderboardRow) => {
-      if (sortKey === "model") return left.model.label.localeCompare(right.model.label);
+      const direction = sortDirection === "asc" ? 1 : -1;
+      if (sortKey === "model") return left.model.label.localeCompare(right.model.label) * direction;
       const leftValue = left[sortKey];
       const rightValue = right[sortKey];
       if (leftValue === null) return rightValue === null ? 0 : 1;
       if (rightValue === null) return -1;
-      return leftValue - rightValue;
+      return (leftValue - rightValue) * direction;
     };
-    return nextRows.sort((left, right) => compare(left, right) * (sortDirection === "asc" ? 1 : -1));
+    return nextRows.sort(compare);
   }, [category, filteredAttempts, report, sortDirection, sortKey, taskId]);
 
   if (error) return <ErrorState message={error} />;
@@ -182,10 +188,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
   const summarySpeed = category === "all" && taskId === "all"
     ? selectedModel.metrics.outputTokensPerSecond
     : average(selectedAttempts.map((attempt) => attempt.metrics.outputTokensPerSecond));
-  const summaryCost = selectedAttempts.reduce<number | null>(
-    (sum, attempt) => attempt.metrics.costUsd === null ? sum : (sum ?? 0) + attempt.metrics.costUsd,
-    null
-  );
+  const summaryCost = totalKnownCost(selectedAttempts);
   const passedCount = selectedAttempts.filter((attempt) => attempt.status === "passed").length;
   const costPerCorrect = summaryCost === null || passedCount === 0 ? null : summaryCost / passedCount;
   const recoveryAttempt = report.attempts.find(

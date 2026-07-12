@@ -104,6 +104,20 @@ describe("TaskSchema", () => {
       expect(result.error.issues[0]?.path).toEqual(["contextRecovery"]);
     }
   });
+
+  it("requires phase-one notes for every context recovery task", () => {
+    const result = TaskSchema.safeParse({
+      ...validTask,
+      category: "context-recovery",
+      contextRecovery: {
+        enabled: true,
+        notesRequired: false,
+        phase1Prompt: "Implement the first safe slice."
+      }
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("SuiteSchema", () => {

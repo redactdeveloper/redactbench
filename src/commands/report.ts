@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, readdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,7 +21,9 @@ async function locateDashboard(explicitDirectory?: string): Promise<string> {
       ];
   for (const candidate of candidates) {
     try {
-      if ((await stat(join(candidate, "index.html"))).isFile()) return candidate;
+      if ((await stat(join(candidate, "index.html"))).isFile()) {
+        return await realpath(candidate);
+      }
     } catch {
       // Try the next deterministic build location.
     }
@@ -42,14 +44,33 @@ export async function reportCommand(
   const report = aggregateJournal(journal.entries, generatedAt);
   const directory = resolve(outDirectory);
   const dashboard = await locateDashboard(dashboardDirectory);
-  if (containsPath(dashboard, directory) || containsPath(directory, dashboard)) {
+  try {
+    if ((await lstat(directory)).isSymbolicLink()) {
+      throw new RedactBenchError(
+        "CONFIG_INVALID",
+        "report output must not be a symbolic link"
+      );
+    }
+  } catch (error) {
+    if (
+      error instanceof RedactBenchError ||
+      (error as NodeJS.ErrnoException).code !== "ENOENT"
+    ) {
+      throw error;
+    }
+  }
+  await mkdir(directory, { recursive: true });
+  const realDirectory = await realpath(directory);
+  if (
+    containsPath(dashboard, realDirectory) ||
+    containsPath(realDirectory, dashboard)
+  ) {
     throw new RedactBenchError(
       "CONFIG_INVALID",
       "report output must not contain, or be contained by, the dashboard build"
     );
   }
   const file = resolve(directory, "report.json");
-  await mkdir(directory, { recursive: true });
   await Promise.all([
     rm(join(directory, "assets"), { force: true, recursive: true }),
     rm(join(directory, "index.html"), { force: true })

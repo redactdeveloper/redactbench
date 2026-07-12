@@ -25,7 +25,7 @@ import { parseModelResponse } from "./response.js";
 import { runDockerCheck } from "./sandbox/docker.js";
 import {
   createIsolatedWorkspace,
-  resolveContainedPath,
+  resolveContainedRealPath,
   type IsolatedWorkspace
 } from "./workspace.js";
 
@@ -184,14 +184,10 @@ export async function runContextRecoveryAttempt(
         "context recovery configuration is missing"
       );
     }
-    const sourceDirectory = resolveContainedPath(
-      input.taskDirectory,
-      input.task.workspace
-    );
-    const evaluatorDirectory = resolveContainedPath(
-      input.taskDirectory,
-      input.task.evaluator
-    );
+    const [sourceDirectory, evaluatorDirectory] = await Promise.all([
+      resolveContainedRealPath(input.taskDirectory, input.task.workspace),
+      resolveContainedRealPath(input.taskDirectory, input.task.evaluator)
+    ]);
     let phase1Notes: string;
     let phase1Patch: string;
     let phase1PatchHash: string;
