@@ -1,0 +1,29 @@
+schemaVersion: 1
+id: recover-durable-import-checkpoint
+title: Recover a durable importer checkpoint
+category: debugging
+description: Diagnose and repair resume data loss caused by a checkpoint advancing before an imported row is durable.
+prompt: |
+  The importer can permanently skip a row when its process stops during a batch. Diagnose the ordering bug and repair it. A row may be considered committed only after syncRows resolves, and the checkpoint must never advance beyond committed rows. appendRow is idempotent by row.id, so replaying an uncheckpointed row is safe. Preserve resumeImport(rows, store), the checkpoint formats documented in README.md, input immutability, and the existing module boundaries. Keep the change narrow.
+tags: [gold, javascript, durability, recovery]
+checks:
+  - id: normal-import
+    label: Completes a normal import and writes a resumable checkpoint
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, normal]
+    weight: 2
+  - id: checkpoint-crash
+    label: Does not skip a row when checkpoint persistence crashes
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, checkpoint-crash]
+    weight: 3
+  - id: idempotent-resume
+    label: Safely replays a durable row whose checkpoint was not written
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, idempotent-resume]
+    weight: 3
+  - id: legacy-checkpoint
+    label: Resumes legacy numeric checkpoints without replaying committed rows
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, legacy]
+    weight: 2

@@ -1,0 +1,9 @@
+schemaVersion: 1
+id: magnum-gold-authoring
+title: Magnum Gold Authoring Suite
+description: Incomplete Gold calibration surface. Never publish scores from this smoke suite.
+purpose: smoke
+scorerVersion: 3.0.0-dev
+tasks:
+  - manifest: debugging-crash-safe-checkpoint/task.yaml
+    weight: 1
