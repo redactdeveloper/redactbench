@@ -302,3 +302,91 @@ weighted report attempts ─→ repeat statistics ─→ dashboard reliability U
 - Fresh run: 24 attempts, 96 independent Docker checks, 8 categories, journal verified, 0 attempt errors.
 - Fixture scores: Strong 100.0%, Fast 59.1%, Cautious 32.4%.
 - При стандартном repeat=1 report хранит `sampleCount: 1` и `confidence95: null`; это ожидаемое честное состояние, а не отсутствие данных из-за ошибки.
+
+---
+
+# План Docker-first benchmark surface v0.3
+
+## Цель
+
+Подготовить честную поверхность будущего сравнительного прогона для одиннадцати заданных provider+model+harness entrants. До фактического запуска UI показывает roster и readiness, но не выдумывает score. Любой agent attempt выполняется только в отдельном Docker container; host CLI разрешён для auth/preflight, но не как benchmark execution fallback.
+
+## Зафиксированная матрица
+
+1. GPT-5.6 Sol Max — OpenAI / Codex
+2. GPT-5.6 Terra Max — OpenAI / Codex
+3. GPT-5.6 Luna Max — OpenAI / Codex
+4. GPT-5.5 xHigh — OpenAI / Codex
+5. Grok 4.5 High — xAI / Grok Build
+6. Grok Build — xAI / Grok Build
+7. Cursor Composer 2.5 — Cursor / Cursor Agent
+8. Gemini 3.5 Flash High — Google / AGY
+9. Gemini 3.1 Pro High — Google / AGY
+10. GLM 5.2 Max — Z.AI / OpenCode
+11. Hy3 High — OpenRouter / OpenCode (последнее указание заменяет первоначальный Claude Code harness)
+
+## Архитектурные решения
+
+- Entrant identity — это provider route + model profile + harness; одинаковая модель в другом harness или через другого router была бы отдельной строкой.
+- Roster и runtime binding разделены: roster можно отрисовать до появления container image, но runnable preflight требует pinned/локально собранный image и command contract.
+- Harness container получает writable copy workspace, provider network и только allowlisted credential references. Hidden evaluator туда не монтируется.
+- Grader остаётся вторым контуром: `network none`, fresh workspace clone на check, evaluator read-only.
+- Один container соответствует `entrant × task × repeat`. Context Recovery запускает phase 1 и phase 2 в разных containers.
+- API keys никогда не хранятся в YAML/report/journal/image/command line. Поддерживаются только env names или узкие read-only auth mounts.
+- До завершения attempt score равен отсутствующему значению (`Not run`), а не нулю.
+
+## Dependency graph
+
+```text
+typed field roster
+        │
+        ├──→ static entrant surface (no fake scores)
+        │
+        └──→ Docker harness runtime contract
+                       │
+                       ├──→ credential/image preflight
+                       └──→ per-harness adapters
+                                      │
+                                      v
+                              paid benchmark runs
+```
+
+## Инкременты
+
+### Задача 24: Версионированный roster contract
+
+- Добавить strict schema для field, entrant и harness identity.
+- Зафиксировать ровно 11 entrants в source-controlled manifest без credentials.
+- Проверять порядок, unique IDs и отсутствие неизвестных harness variants.
+
+### Задача 25: Docker execution contract
+
+- Описать container image, argv template, limits, network policy и credential references отдельно от entrant.
+- Runner/preflight отклоняет отсутствие Docker binding и никогда не исполняет harness на host.
+- Harness container не получает evaluator directory или полный host environment.
+
+### Задача 26: Entrant surface
+
+- Добавить dashboard-раздел с 11 entrants, provider/harness badges, profile и состоянием `Not run`/readiness.
+- Не смешивать fixture demo leaderboard с целевой матрицей.
+- Проверить keyboard, 390/768/1440 layouts и отсутствие fake metrics.
+
+### Задача 27: Readiness и безопасные credentials
+
+- Проверять только наличие нужного env/profile/image без печати значения или содержимого auth-файла.
+- Для Codex, Grok, Cursor и AGY использовать отдельные read-only auth mounts; для GLM/OpenRouter — env allowlist.
+- Секрет, попавший в чат, должен быть перевыпущен до платного запуска.
+
+### Задача 28: Harness adapters и первый dry-run
+
+- Реализовывать adapters по одному: Codex → Grok → Cursor → AGY → OpenCode.
+- Каждый adapter проходит бесплатный/local dry-run container contract до model calls.
+- Платный run начинается только после явного preflight budget и подтверждённых model IDs.
+
+## Definition of Done поверхности
+
+- [ ] Manifest содержит ровно 11 согласованных entrants и не содержит secrets.
+- [ ] UI показывает roster/readiness без score до запуска.
+- [ ] Любая executable binding имеет `execution: docker`; host fallback отсутствует.
+- [ ] Hidden evaluator недоступен harness container.
+- [ ] Contract/component/security tests, typecheck, lint, build и browser smoke чистые.

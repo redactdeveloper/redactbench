@@ -440,3 +440,55 @@
 - [x] Demo покрывает все 8 categories.
 - [x] Ограничения статистики и smoke coverage документированы.
 - [ ] Worktree чист, изменения сохранены атомарными commits.
+
+---
+
+## Задача 24: Добавить roster contract для 11 entrants
+
+**Критерии приёмки:**
+
+- [x] Strict schema различает provider, model label, harness и stable entrant ID.
+- [x] Manifest содержит ровно 11 согласованных связок в заданном порядке.
+- [x] Duplicate IDs, неизвестный harness и credential-shaped поля отклоняются.
+
+**Проверка:** [x] RED/GREEN `tests/field.test.ts` — 7 passed; typecheck/lint clean.
+
+## Задача 25: Зафиксировать Docker-only harness execution
+
+**Критерии приёмки:**
+
+- [ ] Runnable binding требует OCI image, argv template и bounded resources.
+- [ ] Harness workspace writable, evaluator отсутствует, credentials allowlisted.
+- [ ] Host execution fallback отсутствует и тестом отклоняется.
+
+**Проверка:** exact Docker argv/security tests; Docker dry-run без model call.
+
+## Задача 26: Сделать entrant surface в dashboard
+
+**Критерии приёмки:**
+
+- [ ] Отображаются 11 models, их provider/harness и честный `Not run` state.
+- [ ] Fixture demo results визуально отделены от target field.
+- [ ] Surface доступна с клавиатуры и responsive без page overflow.
+
+**Проверка:** component tests + Playwright 390/768/1440.
+
+## Задача 27: Добавить credential/image readiness
+
+**Критерии приёмки:**
+
+- [ ] Проверяется наличие, но никогда не сериализуется значение секрета.
+- [ ] Profile mounts read-only и scoped по harness.
+- [ ] Exposed credentials перевыпущены до платного запуска.
+
+**Проверка:** redaction/absence tests + manual preflight with names only.
+
+## Задача 28: Подключить harness adapters инкрементально
+
+**Критерии приёмки:**
+
+- [ ] Codex, Grok, Cursor, AGY и OpenCode имеют отдельные container adapters.
+- [ ] Context Recovery создаёт новый container для phase 2.
+- [ ] Первый платный run требует budget confirmation и точных model identifiers.
+
+**Проверка:** per-adapter dry-run, затем opt-in live smoke.
