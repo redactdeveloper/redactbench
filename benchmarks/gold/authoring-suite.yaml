@@ -11,3 +11,5 @@ tasks:
     weight: 1
   - manifest: debugging-dst-scheduler/task.yaml
     weight: 1
+  - manifest: algorithms-streaming-jsonl/task.yaml
+    weight: 1

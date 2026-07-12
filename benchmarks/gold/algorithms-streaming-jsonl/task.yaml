@@ -1,0 +1,29 @@
+schemaVersion: 1
+id: decode-chunked-jsonl-stream
+title: Decode a chunked JSONL byte stream
+category: algorithms
+description: Repair incremental byte framing across arbitrary transport chunks without corrupting UTF-8 or bypassing line limits.
+prompt: |
+  JsonlDecoder currently treats transport chunks as complete text records. Repair it so push(Uint8Array) emits only complete JSON values and finish() emits one final unterminated record. Chunk boundaries may split JSON syntax, CRLF, or a multi-byte UTF-8 sequence. Ignore blank or whitespace-only lines, enforce maxLineBytes against raw bytes for every record, reject calls after finish(), and do not mutate caller-owned chunks. Preserve the constructor and public method names in src/jsonl-decoder.mjs without adding external dependencies.
+tags: [gold, javascript, streaming, parsing]
+checks:
+  - id: chunk-boundaries
+    label: Frames records across arbitrary byte chunks
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, boundaries]
+    weight: 3
+  - id: utf8-boundaries
+    label: Preserves multi-byte UTF-8 split between chunks
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, utf8]
+    weight: 3
+  - id: line-contract
+    label: Handles CRLF and blank records
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, line-contract]
+    weight: 2
+  - id: limits-and-finish
+    label: Enforces byte limits and finalization state
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, limits]
+    weight: 2

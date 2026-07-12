@@ -42,12 +42,15 @@ describe("Gold debugging authoring slice", () => {
       purpose: "smoke",
       scorerVersion: "3.0.0-dev"
     });
-    expect(definition.tasks.map((entry) => entry.task.id)).toEqual([
+    expect(definition.tasks
+      .filter((entry) => entry.task.category === "debugging")
+      .map((entry) => entry.task.id)).toEqual([
       "recover-durable-import-checkpoint",
       "stabilize-expiring-cache-refresh",
       "repair-local-daily-scheduler"
     ]);
-    expect(definition.tasks.every((entry) => entry.task.category === "debugging")).toBe(true);
+    expect(definition.tasks.filter((entry) => entry.task.category === "debugging"))
+      .toHaveLength(3);
   });
 
   it("keeps the real Gold corpus independent from Silver", async () => {
