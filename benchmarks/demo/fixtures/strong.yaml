@@ -46,6 +46,27 @@ responses:
     outputTokens: 88
     ttftMs: 710
     durationMs: 1840
+  "isolate-request-id-state:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/request-ids.mjs b/request-ids.mjs
+      --- a/request-ids.mjs
+      +++ b/request-ids.mjs
+      @@ -1,5 +1,4 @@
+      -let nextId = 0;
+      -
+       export function createRequestIdGenerator(prefix) {
+      +  let nextId = 0;
+         return () => `${prefix}-${++nextId}`;
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      The counter now belongs to each factory closure, preserving output while removing cross-instance coupling.
+      </redactbench_notes>
+    inputTokens: 360
+    outputTokens: 83
+    ttftMs: 650
+    durationMs: 1510
   "reject-false-find-premise:final":
     text: "The premise is false. Array.prototype.find returns undefined when no element matches; production code should check that result explicitly or provide an intentional fallback with ??, rather than treating the first item as a default."
     inputTokens: 180

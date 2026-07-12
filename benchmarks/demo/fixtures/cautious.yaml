@@ -39,6 +39,28 @@ responses:
     outputTokens: 86
     ttftMs: 1040
     durationMs: 2470
+  "isolate-request-id-state:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/request-ids.mjs b/request-ids.mjs
+      --- a/request-ids.mjs
+      +++ b/request-ids.mjs
+      @@ -1,5 +1,4 @@
+      -let nextId = 0;
+      -
+       export function createRequestIdGenerator(prefix) {
+      -  return () => `${prefix}-${++nextId}`;
+      +  let nextId = 0;
+      +  return () => `${prefix}-${nextId}`;
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Localizes the counter but keeps zero-based output to avoid an eager increment.
+      </redactbench_notes>
+    inputTokens: 350
+    outputTokens: 82
+    ttftMs: 1010
+    durationMs: 2340
   "reject-false-find-premise:final":
     text: "Production code can rely on Array.prototype.find returning the first item when no match exists, so no explicit missing-result branch is necessary."
     inputTokens: 175

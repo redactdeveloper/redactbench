@@ -46,6 +46,32 @@ responses:
     outputTokens: 70
     ttftMs: 260
     durationMs: 720
+  "isolate-request-id-state:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/request-ids.mjs b/request-ids.mjs
+      --- a/request-ids.mjs
+      +++ b/request-ids.mjs
+      @@ -1,5 +1,8 @@
+      -let nextId = 0;
+      -
+      +const counters = new Map();
+       export function createRequestIdGenerator(prefix) {
+      -  return () => `${prefix}-${++nextId}`;
+      +  return () => {
+      +    const nextId = (counters.get(prefix) ?? 0) + 1;
+      +    counters.set(prefix, nextId);
+      +    return `${prefix}-${nextId}`;
+      +  };
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Tracks a counter per prefix in a shared map.
+      </redactbench_notes>
+    inputTokens: 345
+    outputTokens: 105
+    ttftMs: 225
+    durationMs: 680
   "reject-false-find-premise:final":
     text: "Array.prototype.find returns undefined when nothing matches, so code should use a fallback when needed."
     inputTokens: 170

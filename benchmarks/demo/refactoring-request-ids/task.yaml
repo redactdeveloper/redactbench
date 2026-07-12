@@ -1,0 +1,28 @@
+schemaVersion: 1
+id: isolate-request-id-state
+title: Refactor request ID state
+category: refactoring
+description: A factory currently leaks one mutable counter across every generated instance.
+prompt: Refactor createRequestIdGenerator so every generator owns an independent counter starting at 1. Keep its exported name, parameter, and returned string format unchanged. Remove module-scoped mutable counter state rather than resetting shared state on each factory call.
+tags: [smoke, javascript, structure]
+checks:
+  - id: sequence-behavior
+    label: Preserves sequential behavior
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, sequence]
+    weight: 2
+  - id: instance-isolation
+    label: Isolates generator instances
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, isolation]
+    weight: 3
+  - id: structural-state
+    label: Removes module mutable state
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, structure]
+    weight: 2
+  - id: output-contract
+    label: Preserves prefix formatting
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, prefix]
+    weight: 1

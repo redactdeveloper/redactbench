@@ -8,6 +8,8 @@ tasks:
     weight: 1
   - manifest: debugging-get-user/task.yaml
     weight: 1
+  - manifest: refactoring-request-ids/task.yaml
+    weight: 1
   - manifest: hallucination-pushback/task.yaml
     weight: 1
   - manifest: context-recovery/task.yaml
