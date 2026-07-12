@@ -1,0 +1,21 @@
+schemaVersion: 1
+# Optional pricing is intentionally omitted. Add rates only after checking the
+# provider's official pricing page; otherwise cost metrics remain null.
+models:
+  - id: openai-model
+    label: OpenAI model snapshot
+    provider: openai
+    model: replace-with-an-openai-model-snapshot
+    maxOutputTokens: 8192
+
+  - id: anthropic-model
+    label: Anthropic model snapshot
+    provider: anthropic
+    model: replace-with-an-anthropic-model-snapshot
+    maxOutputTokens: 8192
+
+  - id: google-model
+    label: Gemini model snapshot
+    provider: google
+    model: replace-with-a-gemini-model-snapshot
+    maxOutputTokens: 8192
