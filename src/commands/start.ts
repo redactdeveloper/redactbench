@@ -30,6 +30,7 @@ export interface StartCommandOptions {
   dryRun: boolean;
   env: Readonly<Record<string, string | undefined>>;
   fieldFile: string;
+  maxGenerations: number;
   outDirectory: string;
   onProgress?: (event: RunProgressEvent) => Promise<void> | void;
   repeatCount: number;
@@ -53,6 +54,9 @@ export interface StartPlan {
   concurrency: number;
   entrantCount: number;
   entrants: readonly StartPlanEntrant[];
+  generationCount: number;
+  generationLimit: number;
+  generationReady: boolean;
   repeatCount: number;
   runId: string;
   seed: number;
@@ -216,6 +220,7 @@ function table(report: Report): string {
 
 export function formatStartResult(result: StartCommandResult): string {
   const summary = `${result.plan.entrantCount} entrants · ${result.plan.taskCount} tasks · ${result.plan.attemptCount} attempts · R${result.plan.repeatCount} · C${result.plan.concurrency} · seed ${result.plan.seed}`;
+  const generationBudget = `Generation budget: ${result.plan.generationCount}/${result.plan.generationLimit} · ${result.plan.generationReady ? "READY" : "BLOCKED"}`;
   if (result.dryRun) {
     const readyCredentials = result.credentials.checks.filter((check) => check.ready).length;
     const readyImages = result.images.filter((image) => image.status === "ready").length;
@@ -231,6 +236,7 @@ export function formatStartResult(result: StartCommandResult): string {
       .map((network) => network.name);
     return [
       `RedactBench start dry-run: ${summary}`,
+      generationBudget,
       `Credentials: ${readyCredentials}/${result.credentials.checks.length} ready`,
       ...(missingCredentials.length > 0
         ? [`  Missing: ${missingCredentials.join(", ")}`]
@@ -249,6 +255,7 @@ export function formatStartResult(result: StartCommandResult): string {
   }
   return [
     `RedactBench run complete: ${summary}`,
+    generationBudget,
     "",
     table(result.report),
     "",
@@ -262,6 +269,16 @@ export async function startCommand(
   options: StartCommandOptions,
   dependencies: StartCommandDependencies = {}
 ): Promise<StartCommandResult> {
+  if (
+    !Number.isInteger(options.maxGenerations) ||
+    options.maxGenerations < 1 ||
+    options.maxGenerations > 1_000_000
+  ) {
+    throw new RedactBenchError(
+      "CONFIG_INVALID",
+      "maxGenerations must be between 1 and 1000000"
+    );
+  }
   const [field, suiteDefinition] = await Promise.all([
     loadBenchmarkField(resolve(options.fieldFile)),
     loadSuiteDefinition(resolve(options.suiteFile))
@@ -273,6 +290,13 @@ export async function startCommand(
   const bindingByEntrant = new Map(
     catalog.bindings.map((binding) => [binding.entrantId, binding])
   );
+  const generationsPerEntrant = suiteDefinition.tasks.reduce(
+    (total, task) =>
+      total + (task.task.category === "context-recovery" ? 2 : 1),
+    0
+  );
+  const generationCount =
+    field.entrants.length * generationsPerEntrant * options.repeatCount;
   const plan: StartPlan = {
     attemptCount:
       field.entrants.length * suiteDefinition.tasks.length * options.repeatCount,
@@ -289,12 +313,22 @@ export async function startCommand(
         provider: entrant.provider
       };
     }),
+    generationCount,
+    generationLimit: options.maxGenerations,
+    generationReady: generationCount <= options.maxGenerations,
     repeatCount: options.repeatCount,
     runId: options.runId,
     seed: options.seed,
     suiteTitle: suiteDefinition.suite.title,
     taskCount: suiteDefinition.tasks.length
   };
+
+  if (!options.dryRun && !plan.generationReady) {
+    throw new RedactBenchError(
+      "CONFIG_INVALID",
+      `planned ${plan.generationCount} generations exceed the configured limit ${plan.generationLimit}`
+    );
+  }
 
   await (dependencies.preflightDocker ?? preflightDocker)();
   const inspectCredentials =

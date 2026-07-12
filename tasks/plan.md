@@ -400,7 +400,15 @@ typed field roster
 ### Следующие инкременты после задачи 30
 
 - Задача 31: автоматически предлагать/возобновлять последний незавершённый target run без смешивания конфигураций.
-- Задача 32: добавить явный budget envelope и fail-closed egress readiness для платных/adversarial runs.
+- Задача 32: добавить generation budget envelope; egress readiness оставить отдельным security slice, потому что bridge network не является allowlist.
+
+### Задача 32: Generation budget envelope
+
+- План отдельно считает attempts и верхнюю границу вызовов `adapter.generate`; Context Recovery считается как две generations.
+- Normal run fail-closed до Docker/credentials/provider activity, если план превышает `--max-generations`.
+- Default cap `100` пропускает базовый план `99`, но repeat `2+` требует явного повышения лимита.
+- Dry-run не падает, а показывает `READY/BLOCKED`, чтобы лимит можно было подобрать без model/API calls.
+- Envelope не называется dollar/token budget: agent CLI может выполнять несколько внутренних model turns внутри одной generation.
 
 ## Definition of Done поверхности
 
@@ -411,3 +419,4 @@ typed field roster
 - [x] Contract/component/security tests, typecheck, lint, build и browser smoke чистые.
 - [x] `redactbench start --dry-run` доказывает готовность orchestration без model/API calls.
 - [x] Долгий `redactbench start` показывает durable progress и корректный resume count.
+- [x] Default generation envelope пропускает базовый план и блокирует неявное увеличение matrix до preflight.

@@ -110,6 +110,9 @@ describe("CLI", () => {
         concurrency: 1,
         entrantCount: 11,
         entrants: [],
+        generationCount: 99,
+        generationLimit: 100,
+        generationReady: true,
         repeatCount: 1,
         runId: "run-test",
         seed: 20_260_712,
@@ -119,6 +122,10 @@ describe("CLI", () => {
     });
 
     expect(await main(["start", "--dry-run"], {
+      env: {
+        REDACTBENCH_CODEX_PROFILE: "/fixture/codex",
+        UNRELATED_HOST_SECRET: "must-not-cross-boundary"
+      },
       now: () => Date.parse("2026-07-12T00:00:00.000Z"),
       start,
       stdout: stdout.stream
@@ -127,7 +134,9 @@ describe("CLI", () => {
     expect(start).toHaveBeenCalledWith(expect.objectContaining({
       concurrency: 1,
       dryRun: true,
+      env: { REDACTBENCH_CODEX_PROFILE: "/fixture/codex" },
       fieldFile: "benchmarks/target-field.yaml",
+      maxGenerations: 100,
       repeatCount: 1,
       runtimesFile: "benchmarks/target-runtimes.yaml",
       seed: 20_260_712,
@@ -140,6 +149,7 @@ describe("CLI", () => {
   it("streams sanitized progress for a real start invocation", async () => {
     const stdout = outputBuffer();
     const start = vi.fn(async (options: StartCommandOptions) => {
+      expect(options.maxGenerations).toBe(250);
       await options.onProgress?.({
         completedAttempts: 0,
         remainingAttempts: 88,
@@ -173,6 +183,9 @@ describe("CLI", () => {
           concurrency: 1,
           entrantCount: 11,
           entrants: [],
+          generationCount: 99,
+          generationLimit: options.maxGenerations,
+          generationReady: true,
           repeatCount: 1,
           runId: options.runId,
           seed: 20_260_712,
@@ -185,7 +198,13 @@ describe("CLI", () => {
       };
     });
 
-    expect(await main(["start", "--run-id", "target-run"], {
+    expect(await main([
+      "start",
+      "--run-id",
+      "target-run",
+      "--max-generations",
+      "250"
+    ], {
       start,
       stdout: stdout.stream
     })).toBe(0);
@@ -200,6 +219,21 @@ describe("CLI", () => {
       "Finished target-run: 88/88 attempts recorded\n"
     );
     expect(stdout.value()).not.toContain("unsafe.test");
+  });
+
+  it("rejects an invalid generation limit before invoking start", async () => {
+    const start = vi.fn();
+    const stderr = outputBuffer();
+
+    expect(await main(["start", "--max-generations", "0"], {
+      start,
+      stderr: stderr.stream
+    })).toBe(2);
+
+    expect(start).not.toHaveBeenCalled();
+    expect(stderr.value()).toContain(
+      "max-generations must be between 1 and 1000000"
+    );
   });
 
   it("validates suite, task and model files without running Docker", async () => {

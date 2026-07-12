@@ -73,6 +73,9 @@ describe("formatRunProgress", () => {
         concurrency: 1,
         entrantCount: 11,
         entrants: [],
+        generationCount: 99,
+        generationLimit: 100,
+        generationReady: true,
         repeatCount: 1,
         runId: "target\u001B]8;;https://unsafe.test\u0007-run",
         seed: 20_260_712,
@@ -97,6 +100,7 @@ const options = {
   dryRun: true,
   env: {},
   fieldFile: "benchmarks/target-field.yaml",
+  maxGenerations: 100,
   outDirectory: "runs",
   repeatCount: 1,
   runId: "target-dry-run",
@@ -137,6 +141,9 @@ describe("startCommand", () => {
       attemptCount: 88,
       concurrency: 1,
       entrantCount: 11,
+      generationCount: 99,
+      generationLimit: 100,
+      generationReady: true,
       repeatCount: 1,
       taskCount: 8
     });
@@ -148,6 +155,27 @@ describe("startCommand", () => {
     expect(runBenchmark).not.toHaveBeenCalled();
     expect(stageCredentials).not.toHaveBeenCalled();
     expect(formatStartResult(result)).toContain("No model or API requests were sent");
+    expect(formatStartResult(result)).toContain("Generation budget: 99/100 · READY");
+  });
+
+  it("reports a blocked generation envelope in dry-run without model calls", async () => {
+    const runBenchmark = vi.fn();
+    const result = await startCommand(
+      { ...options, maxGenerations: 50 },
+      {
+        ensureImages: vi.fn().mockResolvedValue([]),
+        ensureNetworks: vi.fn().mockResolvedValue([]),
+        inspectCredentials: vi.fn().mockResolvedValue({ checks: [], ready: true }),
+        preflightDocker: vi.fn().mockResolvedValue(undefined),
+        runBenchmark
+      }
+    );
+
+    expect(result.plan.generationReady).toBe(false);
+    expect(formatStartResult(result)).toContain(
+      "Generation budget: 99/50 · BLOCKED"
+    );
+    expect(runBenchmark).not.toHaveBeenCalled();
   });
 
   it("runs, packages and summarizes the benchmark after every preflight passes", async () => {
@@ -241,6 +269,26 @@ describe("startCommand", () => {
       }
     )).rejects.toThrow(/REDACTBENCH_ZAI_KEY_FILE/u);
     expect(ensureImages).not.toHaveBeenCalled();
+    expect(runBenchmark).not.toHaveBeenCalled();
+  });
+
+  it("blocks an over-budget run before Docker preflight or credential checks", async () => {
+    const inspectCredentials = vi.fn();
+    const preflightDocker = vi.fn();
+    const runBenchmark = vi.fn();
+
+    await expect(startCommand(
+      {
+        ...options,
+        dryRun: false,
+        maxGenerations: 100,
+        repeatCount: 2
+      },
+      { inspectCredentials, preflightDocker, runBenchmark }
+    )).rejects.toThrow(/planned 198 generations exceed the configured limit 100/u);
+
+    expect(preflightDocker).not.toHaveBeenCalled();
+    expect(inspectCredentials).not.toHaveBeenCalled();
     expect(runBenchmark).not.toHaveBeenCalled();
   });
 });

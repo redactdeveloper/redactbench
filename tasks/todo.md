@@ -518,3 +518,18 @@
 **Зависимости:** задачи 29 и journal resume.
 
 **Оценка размера:** Medium — `src/run.ts`, `src/commands/start.ts`, `src/cli.ts` и целевые tests, двумя атомарными инкрементами.
+
+## Задача 32: Ограничить generation budget до платного запуска
+
+**Критерии приёмки:**
+
+- [x] План считает 99 generations для текущих 88 attempts, учитывая вторую Context Recovery phase.
+- [x] `redactbench start` по умолчанию допускает не более 100 generations; превышение останавливается до Docker preflight и credentials.
+- [x] `--dry-run` показывает `READY/BLOCKED`, а `--max-generations` позволяет явно повысить cap.
+- [x] Документация не выдаёт generation cap за точный dollar/token limit внутренних agent turns.
+
+**Проверка:** RED/GREEN plan/CLI boundary tests; default `99/100 READY`; `repeat 2` блокируется до preflight как `198/100`; host env сокращён до allowlist; production dry-run без model/API calls; полный gate — 131 tests, typecheck, lint, build, audit 0 vulnerabilities и Playwright 4/4.
+
+**Зависимости:** target suite definition и задача 29.
+
+**Оценка размера:** Medium — `src/commands/start.ts`, `src/cli.ts`, tests и docs.

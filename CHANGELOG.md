@@ -7,6 +7,11 @@
 ### Added
 
 - Durable progress для долгих benchmark runs: точный initial/resume count, sanitized status после каждой journaled попытки и явное завершение очереди.
+- Fail-closed `--max-generations` envelope с учётом двух Context Recovery phases и видимым `READY/BLOCKED` состоянием в dry-run.
+
+### Security
+
+- `redactbench start` получает только шесть allowlisted environment overrides вместо полного host environment.
 
 ## [0.3.0] - 2026-07-12
 

@@ -31,7 +31,7 @@ npm link
 redactbench start --dry-run
 ```
 
-`--dry-run` валидирует target field, 8 задач, 11 bindings, Docker daemon, host CLIs, образы, сети и только наличие credentials. Он не запускает harness containers и не делает model/API requests. В готовом окружении итог должен показывать `Credentials 6/6`, `Images 5/5`, `Networks 6/6`.
+`--dry-run` валидирует target field, 8 задач, 11 bindings, generation envelope, Docker daemon, host CLIs, образы, сети и только наличие credentials. Он не запускает harness containers и не делает model/API requests. В готовом окружении итог должен показывать `Generation budget 99/100 · READY`, `Credentials 6/6`, `Images 5/5`, `Networks 6/6`.
 
 OAuth-профили по умолчанию берутся из минимальных allowlisted файлов:
 
@@ -59,13 +59,13 @@ chmod 600 ~/.config/redactbench/secrets/*
 redactbench start
 ```
 
-По умолчанию это `11 × 8 × repeat 1 = 88` attempts с concurrency `1` и seed `20260712`. Отсутствующие images и provider bridge networks создаются автоматически. Команда сначала печатает `completed/total`, затем одну sanitized progress-строку после каждой durable записи attempt в journal. Resume сразу показывает уже завершённое число и не выдаёт старые attempts за новые. По завершении печатаются leaderboard, run ID и путь к `runs/<run-id>/report/index.html`. Для надёжного resume используйте один и тот же ID:
+По умолчанию это `11 × 8 × repeat 1 = 88` attempts, но `99` generations: у одиннадцати Context Recovery attempts есть вторая stateless phase. Default `--max-generations 100` пропускает этот план и fail-closed блокирует случайное увеличение до первого Docker/provider action. Отсутствующие images и provider bridge networks создаются автоматически. Команда сначала печатает `completed/total`, затем одну sanitized progress-строку после каждой durable записи attempt в journal. Resume сразу показывает уже завершённое число и не выдаёт старые attempts за новые. По завершении печатаются leaderboard, run ID и путь к `runs/<run-id>/report/index.html`. Для надёжного resume используйте один и тот же ID:
 
 ```bash
 redactbench start --run-id target-2026-07-13
 ```
 
-`--repeat 3` полезнее статистически, но примерно утраивает число модельных попыток и расход. Перед платным прогоном отдельно подтвердите бюджет. User-defined bridge networks изолируют containers друг от друга, но не являются destination allowlist; для adversarial repositories нужен provider-filtered egress proxy/firewall, описанный в threat model.
+`--repeat 3` полезнее статистически, но создаёт `297` generations и поэтому требует явного `--max-generations 297` или выше. Generation cap ограничивает вызовы RedactBench adapter, но не является точным dollar/token budget: один agent CLI process может выполнить несколько внутренних model turns. Перед платным прогоном отдельно подтвердите денежный лимит у providers. User-defined bridge networks изолируют containers друг от друга, но не являются destination allowlist; для adversarial repositories нужен provider-filtered egress proxy/firewall, описанный в threat model.
 
 ## Быстрый fixture demo
 

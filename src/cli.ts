@@ -55,6 +55,7 @@ Start defaults:
   --runtimes benchmarks/target-runtimes.yaml
   --suite benchmarks/demo/suite.yaml
   --repeat 1 · --concurrency 1 · --seed 20260712
+  --max-generations 100
 
 Global options:
   -h, --help
@@ -70,6 +71,25 @@ const EXIT_CODES: Readonly<Record<string, number>> = {
   JOURNAL_INVALID: 6,
   ATTEMPT_ERROR: 7
 };
+
+const START_ENVIRONMENT_NAMES = [
+  "REDACTBENCH_CODEX_PROFILE",
+  "REDACTBENCH_GROK_PROFILE",
+  "REDACTBENCH_CURSOR_PROFILE",
+  "REDACTBENCH_AGY_PROFILE",
+  "REDACTBENCH_ZAI_KEY_FILE",
+  "REDACTBENCH_OPENROUTER_KEY_FILE"
+] as const;
+
+function startEnvironment(
+  environment: Readonly<Record<string, string | undefined>>
+): Readonly<Record<string, string>> {
+  return Object.fromEntries(
+    START_ENVIRONMENT_NAMES.flatMap((name) =>
+      environment[name] ? [[name, environment[name]]] : []
+    )
+  );
+}
 
 function requiredString(value: string | undefined, option: string): string {
   if (!value) {
@@ -216,6 +236,7 @@ async function handleStart(
       "dry-run": { type: "boolean" },
       field: { type: "string" },
       help: { short: "h", type: "boolean" },
+      "max-generations": { type: "string" },
       out: { type: "string" },
       repeat: { type: "string" },
       "run-id": { type: "string" },
@@ -235,8 +256,15 @@ async function handleStart(
   const options: StartCommandOptions = {
     concurrency: integerOption(values.concurrency, 1, "concurrency", 1, 8),
     dryRun,
-    env: dependencies.env,
+    env: startEnvironment(dependencies.env),
     fieldFile: values.field ?? "benchmarks/target-field.yaml",
+    maxGenerations: integerOption(
+      values["max-generations"],
+      100,
+      "max-generations",
+      1,
+      1_000_000
+    ),
     ...(dryRun
       ? {}
       : {
