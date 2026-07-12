@@ -61,7 +61,7 @@ export function safeRelativePathSchema(options: { allowDot?: boolean } = {}) {
     });
 }
 
-const DockerImageSchema = z
+export const DockerImageSchema = z
   .string()
   .min(1)
   .max(300)

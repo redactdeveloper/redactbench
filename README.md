@@ -142,6 +142,7 @@ fsync hash-chained journal → report/dashboard
 - [ADR-001: direct providers, deterministic checks, journal](docs/decisions/001-direct-providers-and-journal.md)
 - [ADR-002: Context Recovery v1](docs/decisions/002-context-recovery-v1.md)
 - [ADR-003: независимые checks и repeat uncertainty](docs/decisions/003-check-isolation-and-repeat-uncertainty.md)
+- [ADR-004: Docker-only harness execution](docs/decisions/004-docker-harness-boundary.md)
 - [Визуальная спецификация](design/DESIGN.md)
 
 ## Честные ограничения v0.2

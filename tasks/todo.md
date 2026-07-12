@@ -457,11 +457,11 @@
 
 **Критерии приёмки:**
 
-- [ ] Runnable binding требует OCI image, argv template и bounded resources.
-- [ ] Harness workspace writable, evaluator отсутствует, credentials allowlisted.
-- [ ] Host execution fallback отсутствует и тестом отклоняется.
+- [x] Runnable binding требует OCI image, argv template и bounded resources.
+- [x] Harness workspace writable, evaluator отсутствует, credentials выдаются только scoped file mounts.
+- [x] Host execution fallback и shell entrypoints отсутствуют и тестом отклоняются.
 
-**Проверка:** exact Docker argv/security tests; Docker dry-run без model call.
+**Проверка:** [x] 13 exact contract/security tests + real Docker dry-run; typecheck/lint clean.
 
 ## Задача 26: Сделать entrant surface в dashboard
 
