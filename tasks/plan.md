@@ -187,3 +187,111 @@ phase 1 request -> patch + notes -> local commit -> RESET -> repo + log + notes 
 - Следует ли стандартизировать OCI image digest и hardware fingerprint как обязательные поля schema v2.
 - Какой browser evaluator принять базовым для UI suite: Playwright image, CDP service или отдельный trusted grader.
 - Нужна ли поддержка tool-use trace для полноценного `inspect → edit → run → observe` вместо patch protocol.
+
+---
+
+# План повышения точности RedactBench v0.2
+
+## Цель
+
+Уменьшить систематическое смещение результатов, показывать статистическую неопределённость и расширить demo с 3 до всех 8 заявленных категорий. Улучшение должно менять доказательность результатов, а не только presentation.
+
+## Найденные источники неточности
+
+1. Все hidden checks одного attempt используют один writable workspace; ранний check способен изменить состояние позднего.
+2. Dashboard пересчитывает filtered score простым средним и теряет suite task weights.
+3. Один point estimate не показывает вариативность повторов и может создавать ложную точность ranking.
+4. Journal знает `seed/concurrency`, но report/dashboard их не показывают рядом с performance metrics.
+5. Demo-suite покрывает только Debugging, Hallucination и Context Recovery, поэтому общий score не представляет весь заявленный category surface.
+
+## Архитектурные решения
+
+- Каждый hidden check получает fresh clone одинакового post-model workspace; mutations check-а удаляются после его завершения.
+- `taskWeight` становится явной частью report attempt, чтобы UI и downstream consumers воспроизводили scorer без догадок.
+- Неопределённость считается по полным repeat-level suite scores, а не по смеси задач разной сложности.
+- Для `n >= 2` используется двухсторонний 95% Student-t interval `mean ± t × s/√n`, ограниченный диапазоном `[0, 1]`; при одном repeat interval равен `null`, а UI не изображает точность.
+- t critical values берутся из NIST table; между опубликованными степенями свободы выбирается ближайшее меньшее значение, что даёт консервативно более широкий interval.
+- Demo расширяется одной детерминированной smoke-задачей на каждую отсутствующую категорию; это проверяет harness breadth, но не объявляется production leaderboard suite.
+
+Источник статистической формулы и critical values:
+
+- https://www.itl.nist.gov/div898/handbook/eda/section3/eda352.htm
+- https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm
+
+## Dependency graph
+
+```text
+check-level workspace isolation
+          │
+          v
+weighted report attempts ─→ repeat statistics ─→ dashboard reliability UI
+          │                         │
+          └──────────────┬──────────┘
+                         v
+               expanded 8-category suite
+                         │
+                         v
+              scorer/docs/fresh verification
+```
+
+## Инкременты
+
+### Задача 15: Изолировать каждый hidden check
+
+- Fresh clone создаётся до sandbox call и удаляется в `finally`.
+- Check mutation не видна следующему check и исходному evaluated workspace.
+- Clone/setup failure становится check `error`, а не падением всего run.
+
+Проверка: evaluator unit regression + Docker integration + полный test suite.
+
+### Задача 16: Добавить weighted repeat statistics
+
+- Report attempt содержит authoritative `taskWeight`.
+- Общий и filtered score используют одинаковую weighted formula.
+- Model/category statistics содержат complete repeat count, sample SD, SE и 95% CI; `n=1` не имеет CI.
+
+Проверка: exact aggregation fixtures для unequal weights, incomplete repeats, n=1/n=3 и CI bounds.
+
+### Задача 17: Показать условия и неопределённость в dashboard
+
+- Report включает repeat/concurrency/seed.
+- Leaderboard и selected model показывают CI только при достаточном числе repeats.
+- При `repeat=1` UI рекомендует `--repeat 3+`, не рисует `±0`.
+
+Проверка: component tests + 1536/1440/390 browser smoke без overflow/errors.
+
+### Задачи 18–22: Расширить demo до 8 категорий
+
+- 18 Algorithms: edge cases, ties и input immutability.
+- 19 Refactoring: behavior preservation плюс проверяемое удаление shared mutable state.
+- 20 Security: path traversal/absolute/NUL defense с valid-path regression.
+- 21 UI: semantic controls, state change и keyboard-safe markup/script behavior.
+- 22 Reasoning: cross-file root cause, evidence и actionable fix без model judge.
+
+Каждая задача получает сильный, частичный и слабый fixture response и минимум три независимых checks.
+
+### Задача 23: Переверсионировать scorer и провести final audit
+
+- Demo scorer становится `1.1.0`, package — `0.2.0`.
+- README/methodology/security/task-authoring/changelog отражают новые guarantees и ограничения.
+- Fresh demo даёт 24 attempts, все checks независимы, journal verified.
+- Clean install, unit/integration, lint, typecheck, build, audit и browser smoke проходят.
+
+## Риски
+
+| Риск | Влияние | Мера |
+|---|---|---|
+| Copy-per-check замедлит большие repos | Среднее | Явно измерить demo; correctness default важнее throughput, оптимизацию оставить profile-driven |
+| t interval неверно интерпретируют как гарантию | Высокое | Называть repeat-level descriptive CI и документировать independence/normality assumptions |
+| Неполный run исказит interval | Высокое | В statistics включать только repeats с полным expected task set |
+| Новые smoke tasks создадут ложное ощущение широкого leaderboard | Среднее | Маркировать suite как deterministic demo/harness regression, не как representative production corpus |
+| UI category task трудно оценить без браузера | Среднее | Проверять semantic/interactive contract детерминированно; визуальное качество оставить отдельному browser-image suite |
+
+## Definition of Done v0.2
+
+- Check order не влияет на workspace state и score.
+- JSON report достаточно для точного повторения weighted filtering и интерпретации run conditions.
+- CI появляется только при двух или более полных repeats.
+- Demo содержит все 8 categories и различает strong/partial/weak fixtures.
+- Документация не выдаёт smoke coverage или t interval за более сильное доказательство.
+- Все проверки чистые, worktree содержит только атомарные commits.

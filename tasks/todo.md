@@ -319,7 +319,7 @@
 
 **Оценка размера:** Medium — 5 файлов.
 
-## Финальная Definition of Done
+## Definition of Done v0.1
 
 - [x] Все 14 задач и контрольные точки отмечены выполненными с фактическими командами/результатами.
 - [x] Никакие API-ключи, `.env`, generated runs, reports или временные QA-файлы не закоммичены.
@@ -327,3 +327,116 @@
 - [x] Полный demo run воспроизводится без обращений к модельным провайдерам.
 - [x] Dashboard визуально и функционально проверен в реальном Chrome.
 - [x] Известные ограничения перечислены без выдачи их за завершённые возможности.
+
+---
+
+## Задача 15: Изолировать каждый hidden check
+
+**Описание:** Запускать каждый check на fresh clone одного и того же post-model workspace, чтобы check order и mutations не меняли score.
+
+**Критерии приёмки:**
+
+- [ ] Второй check не видит файлы/правки, созданные первым.
+- [ ] Исходный evaluated workspace остаётся неизменным.
+- [ ] Clone/setup/cleanup errors безопасно отражаются в check result.
+
+**Проверка:**
+
+- [ ] Targeted evaluator regression проходит.
+- [ ] Docker integration и полный test suite проходят.
+
+**Зависимости:** Задача 6.
+
+**Вероятно затронутые файлы:** `src/evaluator.ts`, `tests/evaluator.test.ts`, `tests/docker.integration.test.ts`.
+
+**Оценка размера:** Small — 3 файла.
+
+## Задача 16: Добавить weighted repeat statistics
+
+**Описание:** Сделать task weights доступными в report и добавить repeat-level SD/SE/95% CI по NIST Student-t formula.
+
+**Критерии приёмки:**
+
+- [ ] Filtered и aggregate scores совпадают при unequal task weights.
+- [ ] Statistics используют только полные repeats и возвращают `null` CI при `n < 2`.
+- [ ] CI ограничен `[0,1]`, а zero variance даёт zero-width interval.
+
+**Проверка:**
+
+- [ ] RED/GREEN unit tests для statistics и aggregate.
+- [ ] Report schema round-trip проходит.
+
+**Зависимости:** Задача 8.
+
+**Вероятно затронутые файлы:** `src/statistics.ts`, `src/contracts.ts`, `src/aggregate.ts`, `tests/statistics.test.ts`, `tests/aggregate.test.ts`.
+
+**Оценка размера:** Medium — 5 файлов.
+
+## Задача 17: Показать reliability и run conditions
+
+**Описание:** Вывести repeat CI, sample count, concurrency и seed в report dashboard без ложной точности при одном repeat.
+
+**Критерии приёмки:**
+
+- [ ] Leaderboard/summary используют authoritative task weights.
+- [ ] `repeat=1` показывает рекомендацию, а не `±0`.
+- [ ] Responsive table и page не получают horizontal overflow.
+
+**Проверка:**
+
+- [ ] Dashboard component tests.
+- [ ] Три Playwright viewport smoke tests.
+
+**Зависимости:** Задача 16.
+
+**Вероятно затронутые файлы:** `dashboard/src/App.tsx`, `dashboard/src/components/Leaderboard.tsx`, `dashboard/src/styles.css`, `tests/dashboard.test.tsx`, `tests/browser/dashboard.spec.ts`.
+
+**Оценка размера:** Medium — 5 файлов.
+
+## Задача 18: Добавить Algorithms smoke task
+
+**Критерии приёмки:** edge cases, deterministic ties и input immutability оцениваются независимыми checks; три fixture tiers различаются.
+
+**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+
+## Задача 19: Добавить Refactoring smoke task
+
+**Критерии приёмки:** behavior сохранён, shared mutable state удалён структурно, три fixture tiers различаются.
+
+**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+
+## Задача 20: Добавить Security smoke task
+
+**Критерии приёмки:** valid path работает, traversal/absolute/NUL блокируются, три fixture tiers различаются.
+
+**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+
+## Задача 21: Добавить UI smoke task
+
+**Критерии приёмки:** semantic controls, state change и keyboard-safe behavior проверяются детерминированно, три fixture tiers различаются.
+
+**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+
+## Задача 22: Добавить Reasoning smoke task
+
+**Критерии приёмки:** cross-file cause, exact evidence и actionable fix оцениваются без LLM judge, три fixture tiers различаются.
+
+**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+
+## Задача 23: Переверсионировать scorer и провести final audit
+
+**Критерии приёмки:**
+
+- [ ] Package `0.2.0`, demo scorer `1.1.0`, docs/changelog актуальны.
+- [ ] Fresh demo: 8 categories × 3 models = 24 attempts, journal verified.
+- [ ] Clean install/tests/lint/typecheck/build/audit/browser smoke чистые.
+- [ ] Final review не содержит unresolved critical/high findings.
+
+## Definition of Done v0.2
+
+- [ ] Hidden checks независимы по filesystem state.
+- [ ] Weighted filtering совпадает с scorer.
+- [ ] Repeat uncertainty видна и корректно отсутствует при одном sample.
+- [ ] Demo покрывает все 8 categories.
+- [ ] Ограничения статистики и smoke coverage документированы.
+- [ ] Worktree чист, изменения сохранены атомарными commits.
