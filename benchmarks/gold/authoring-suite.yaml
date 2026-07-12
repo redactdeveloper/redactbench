@@ -9,3 +9,5 @@ tasks:
     weight: 1
   - manifest: debugging-expiring-cache-race/task.yaml
     weight: 1
+  - manifest: debugging-dst-scheduler/task.yaml
+    weight: 1

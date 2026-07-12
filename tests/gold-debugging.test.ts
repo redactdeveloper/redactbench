@@ -44,7 +44,8 @@ describe("Gold debugging authoring slice", () => {
     });
     expect(definition.tasks.map((entry) => entry.task.id)).toEqual([
       "recover-durable-import-checkpoint",
-      "stabilize-expiring-cache-refresh"
+      "stabilize-expiring-cache-refresh",
+      "repair-local-daily-scheduler"
     ]);
     expect(definition.tasks.every((entry) => entry.task.category === "debugging")).toBe(true);
   });

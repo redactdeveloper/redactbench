@@ -1,0 +1,29 @@
+schemaVersion: 1
+id: repair-local-daily-scheduler
+title: Repair a local-time daily scheduler
+category: debugging
+description: Replace fixed-duration recurrence with explicit local-calendar handling across skipped and duplicated times.
+prompt: |
+  nextDailyRun(schedule, afterEpochMs, zone) currently advances a local daily schedule by a fixed 24-hour duration, so it drifts or duplicates work at offset transitions. Repair it using the injected zone adapter documented in README.md. A skipped local time means no run on that local date. For a duplicated local time, only the earlier resolved instant is eligible; once it has passed, continue to the next local date rather than choosing the duplicate. Return the first eligible instant strictly after afterEpochMs, preserve explicit timezone errors, and keep the public function and adapter boundaries unchanged.
+tags: [gold, javascript, scheduling, timezone]
+checks:
+  - id: spring-forward
+    label: Skips a nonexistent local occurrence
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, spring-forward]
+    weight: 3
+  - id: fall-back
+    label: Does not schedule the duplicated local instant twice
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, fall-back]
+    weight: 3
+  - id: ordinary-calendar
+    label: Chooses today or the next date on an ordinary calendar day
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, ordinary]
+    weight: 2
+  - id: utc-contract
+    label: Preserves UTC daily behavior and timezone errors
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, utc-contract]
+    weight: 2
