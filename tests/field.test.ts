@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import fieldData from "../dashboard/public/field.json";
 import {
   BenchmarkFieldSchema,
   loadBenchmarkField
@@ -88,5 +89,6 @@ describe("target benchmark field", () => {
       true
     );
     expect(JSON.stringify(field)).not.toMatch(/api[_-]?key|token|secret/iu);
+    expect(BenchmarkFieldSchema.parse(fieldData)).toEqual(field);
   });
 });

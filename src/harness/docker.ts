@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { DockerImageSchema } from "../contracts.js";
 import { RedactBenchError } from "../errors.js";
-import { HarnessNameSchema } from "../field.js";
+import { HarnessNameSchema } from "../field-contracts.js";
 import { SCHEMA_VERSION } from "../version.js";
 
 const ALLOWED_TEMPLATES = new Set(["{model}", "{promptFile}", "{workspace}"]);

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "id": "target-field",
+  "title": "RedactBench Target Field",
+  "description": "Docker-only model and harness entrants selected for the next comparative run. Scores remain absent until a verified run completes.",
+  "entrants": [
+    {
+      "id": "gpt-5-6-sol-max-codex",
+      "order": 1,
+      "displayName": "GPT-5.6 Sol Max",
+      "provider": "openai",
+      "harness": "codex",
+      "execution": "docker"
+    },
+    {
+      "id": "gpt-5-6-terra-max-codex",
+      "order": 2,
+      "displayName": "GPT-5.6 Terra Max",
+      "provider": "openai",
+      "harness": "codex",
+      "execution": "docker"
+    },
+    {
+      "id": "gpt-5-6-luna-max-codex",
+      "order": 3,
+      "displayName": "GPT-5.6 Luna Max",
+      "provider": "openai",
+      "harness": "codex",
+      "execution": "docker"
+    },
+    {
+      "id": "gpt-5-5-xhigh-codex",
+      "order": 4,
+      "displayName": "GPT-5.5 xHigh",
+      "provider": "openai",
+      "harness": "codex",
+      "execution": "docker"
+    },
+    {
+      "id": "grok-4-5-high-grok-build",
+      "order": 5,
+      "displayName": "Grok 4.5 High",
+      "provider": "xai",
+      "harness": "grok-build",
+      "execution": "docker"
+    },
+    {
+      "id": "grok-build-grok-build",
+      "order": 6,
+      "displayName": "Grok Build",
+      "provider": "xai",
+      "harness": "grok-build",
+      "execution": "docker"
+    },
+    {
+      "id": "cursor-composer-2-5-cursor",
+      "order": 7,
+      "displayName": "Cursor Composer 2.5",
+      "provider": "cursor",
+      "harness": "cursor",
+      "execution": "docker"
+    },
+    {
+      "id": "gemini-3-5-flash-high-agy",
+      "order": 8,
+      "displayName": "Gemini 3.5 Flash High",
+      "provider": "google",
+      "harness": "agy",
+      "execution": "docker"
+    },
+    {
+      "id": "gemini-3-1-pro-high-agy",
+      "order": 9,
+      "displayName": "Gemini 3.1 Pro High",
+      "provider": "google",
+      "harness": "agy",
+      "execution": "docker"
+    },
+    {
+      "id": "glm-5-2-max-opencode",
+      "order": 10,
+      "displayName": "GLM 5.2 Max",
+      "provider": "zai",
+      "harness": "opencode",
+      "execution": "docker"
+    },
+    {
+      "id": "hy3-high-opencode",
+      "order": 11,
+      "displayName": "Hy3 High",
+      "provider": "openrouter",
+      "harness": "opencode",
+      "execution": "docker"
+    }
+  ]
+}
