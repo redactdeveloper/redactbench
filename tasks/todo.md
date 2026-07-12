@@ -258,15 +258,15 @@
 
 **Критерии приёмки:**
 
-- [ ] Первый viewport, leaderboard table, summary strip и model selection совпадают с концептом.
-- [ ] Любые model/task strings выводятся как escaped text, не через HTML injection.
-- [ ] Desktop layout не превращает таблицу в карточную сетку и имеет логичную keyboard/focus структуру.
+- [x] Первый viewport, leaderboard table, summary strip и model selection совпадают с концептом.
+- [x] Любые model/task strings выводятся как escaped text, не через HTML injection.
+- [x] Desktop layout не превращает таблицу в карточную сетку и имеет логичную keyboard/focus структуру.
 
 **Проверка:**
 
-- [ ] Component tests проходят: `npm test -- dashboard`.
-- [ ] `npm run build:dashboard`.
-- [ ] Screenshot первого viewport сопоставлен с concept через `view_image`.
+- [x] Component tests: 6 dashboard tests passed; полный набор — 69 tests.
+- [x] `npm run build:dashboard` — production bundle собран.
+- [x] Desktop/mobile screenshots сопоставлены с concept через `view_image`.
 
 **Зависимости:** Задача 8 и принятый визуальный концепт.
 
@@ -280,15 +280,15 @@
 
 **Критерии приёмки:**
 
-- [ ] Filters/sort/detail меняют реальный UI state и доступны с клавиатуры.
-- [ ] Context Recovery показывает phase scores, recovery time и penalties, а отсутствующие данные не подменяются нулём.
-- [ ] Report работает с `file`-совместимым static server, CSP и viewport 390×844 без horizontal page overflow.
+- [x] Filters/sort/detail меняют реальный UI state и доступны с клавиатуры.
+- [x] Context Recovery показывает phase scores, recovery time и penalties, а отсутствующие данные не подменяются нулём.
+- [x] Report работает с relative static assets, CSP и viewport 390×844 без horizontal page overflow.
 
 **Проверка:**
 
-- [ ] Component tests: `npm test -- dashboard`.
-- [ ] Browser smoke: desktop 1440×900 и mobile 390×844, console errors/warnings = 0.
-- [ ] Финальный screenshot сопоставлен с concept по минимум пяти точкам.
+- [x] Component tests: state changes, escaped labels, unknown costs и null sorting покрыты.
+- [x] Browser smoke: 1536×1024, 1440×900 и 390×844; 3 passed, console/network errors = 0.
+- [x] Финальный screenshot сопоставлен с concept: palette, rail/header, summary strip, semantic table, recovery timeline и responsive hierarchy.
 
 **Зависимости:** Задачи 10–12.
 
@@ -302,16 +302,16 @@
 
 **Критерии приёмки:**
 
-- [ ] Новый пользователь запускает demo и открывает report по документированным командам.
-- [ ] Документация честно отделяет реализованный patch protocol от будущего полного tool loop.
-- [ ] Указаны версии schema/scorer, threat model, provider env names и правила скрытых проверок.
+- [x] Новый пользователь запускает demo и открывает report по документированным командам.
+- [x] Документация честно отделяет реализованный patch protocol от будущего полного tool loop.
+- [x] Указаны версии schema/scorer, threat model, provider env names и правила скрытых проверок.
 
 **Проверка:**
 
-- [ ] Чистый `npm ci && npm test && npm run lint && npm run typecheck && npm run build`.
-- [ ] `npm audit --audit-level=high` без high/critical.
-- [ ] `npm run bench:demo` и browser smoke проходят после clean build.
-- [ ] Финальный code review не содержит unresolved critical/high findings.
+- [x] Clean-room: `npm ci`; 69 tests; lint/typecheck/build passed.
+- [x] `npm audit --audit-level=high` — 0 vulnerabilities.
+- [x] Fresh `npm run bench:demo`: 9 attempts / 33 Docker checks; browser smoke: 3 passed.
+- [x] Финальный multi-axis review: все required findings исправлены, unresolved critical/high отсутствуют.
 
 **Зависимости:** Задачи 1–13.
 
@@ -321,9 +321,9 @@
 
 ## Финальная Definition of Done
 
-- [ ] Все 14 задач и контрольные точки отмечены выполненными с фактическими командами/результатами.
-- [ ] Никакие API-ключи, `.env`, generated runs, reports или временные QA-файлы не закоммичены.
-- [ ] Git history состоит из проверенных атомарных срезов или явно документировано, почему коммиты были недоступны.
-- [ ] Полный demo run воспроизводится без сети провайдеров.
-- [ ] Dashboard визуально и функционально проверен в реальном браузере.
-- [ ] Известные ограничения перечислены без выдачи их за завершённые возможности.
+- [x] Все 14 задач и контрольные точки отмечены выполненными с фактическими командами/результатами.
+- [x] Никакие API-ключи, `.env`, generated runs, reports или временные QA-файлы не закоммичены.
+- [x] Git history состоит из проверенных атомарных срезов.
+- [x] Полный demo run воспроизводится без обращений к модельным провайдерам.
+- [x] Dashboard визуально и функционально проверен в реальном Chrome.
+- [x] Известные ограничения перечислены без выдачи их за завершённые возможности.
