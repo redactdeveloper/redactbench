@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Account details</title>
+  </head>
+  <body>
+    <div id="details-toggle" class="toggle">Show account details</div>
+    <section id="details-panel">Two-factor authentication is enabled.</section>
+    <script>
+      const toggle = document.getElementById("details-toggle");
+      const panel = document.getElementById("details-panel");
+      toggle.addEventListener("click", () => {
+        panel.hidden = !panel.hidden;
+      });
+    </script>
+  </body>
+</html>

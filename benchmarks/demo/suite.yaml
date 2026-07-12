@@ -12,6 +12,8 @@ tasks:
     weight: 1
   - manifest: security-document-read/task.yaml
     weight: 1
+  - manifest: ui-disclosure/task.yaml
+    weight: 1
   - manifest: hallucination-pushback/task.yaml
     weight: 1
   - manifest: context-recovery/task.yaml

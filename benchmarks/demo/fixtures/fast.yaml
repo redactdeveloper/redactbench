@@ -103,6 +103,28 @@ responses:
     outputTokens: 141
     ttftMs: 275
     durationMs: 890
+  "accessible-disclosure:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/index.html b/index.html
+      --- a/index.html
+      +++ b/index.html
+      @@ -8,5 +8,5 @@
+      -    <div id="details-toggle" class="toggle">Show account details</div>
+      -    <section id="details-panel">Two-factor authentication is enabled.</section>
+      +    <button id="details-toggle" class="toggle" type="button" aria-expanded="false" aria-controls="details-panel">Show account details</button>
+      +    <section id="details-panel" hidden>Two-factor authentication is enabled.</section>
+           <script>
+             const toggle = document.getElementById("details-toggle");
+             const panel = document.getElementById("details-panel");
+      </redactbench_patch>
+      <redactbench_notes>
+      Adds native semantics, the controlled panel relationship, and the initial hidden state.
+      </redactbench_notes>
+    inputTokens: 425
+    outputTokens: 108
+    ttftMs: 230
+    durationMs: 740
   "reject-false-find-premise:final":
     text: "Array.prototype.find returns undefined when nothing matches, so code should use a fallback when needed."
     inputTokens: 170

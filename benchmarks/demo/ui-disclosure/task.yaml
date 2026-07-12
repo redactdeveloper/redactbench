@@ -1,0 +1,28 @@
+schemaVersion: 1
+id: accessible-disclosure
+title: Build an accessible disclosure
+category: ui
+description: A clickable div reveals content but does not expose a reliable accessible state.
+prompt: Turn the details control into a native button while preserving its IDs and text. Associate it with details-panel, keep the panel hidden initially, and synchronize aria-expanded with the panel's hidden state on every activation. Use the native button keyboard behavior and avoid inline event handlers.
+tags: [smoke, html, accessibility]
+checks:
+  - id: semantic-control
+    label: Uses a native button
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, semantic]
+    weight: 2
+  - id: accessible-initial-state
+    label: Declares initial state
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, state]
+    weight: 2
+  - id: synchronized-interaction
+    label: Synchronizes disclosure state
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, behavior]
+    weight: 3
+  - id: event-hygiene
+    label: Avoids inline handlers
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, hygiene]
+    weight: 1
