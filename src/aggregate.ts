@@ -1,11 +1,11 @@
 import type {
-  AttemptReport,
   BenchmarkCategory,
   Report
 } from "./contracts.js";
 import { ReportSchema } from "./contracts.js";
 import { RedactBenchError } from "./errors.js";
 import type { JournalEntry } from "./journal.js";
+import { summarizeWeightedRepeats } from "./statistics.js";
 
 function average(values: Array<number | null>): number | null {
   const measured = values.filter((value): value is number => value !== null);
@@ -43,7 +43,7 @@ export function aggregateJournal(
   }
   const attemptsWithWeight = [...attemptEvents.values()];
   const attempts = attemptsWithWeight
-    .map((event) => event.report)
+    .map((event) => ({ ...event.report, taskWeight: event.taskWeight }))
     .sort(
       (left, right) =>
         left.modelId.localeCompare(right.modelId) ||
@@ -84,6 +84,32 @@ export function aggregateJournal(
       categories[category] = total.weight === 0 ? 0 : total.score / total.weight;
     }
 
+    const observations = modelEvents.map((event) => ({
+      repeat: event.report.repeat,
+      score: event.report.score,
+      taskId: event.report.taskId,
+      weight: event.taskWeight
+    }));
+    const scoreStatistics = summarizeWeightedRepeats(
+      observations,
+      started.run.tasks.map((task) => task.id)
+    ).statistics;
+    const categoryStatistics: Partial<
+      Record<BenchmarkCategory, typeof scoreStatistics>
+    > = {};
+    for (const category of new Set(started.run.tasks.map((task) => task.category))) {
+      const expectedCategoryTaskIds = started.run.tasks
+        .filter((task) => task.category === category)
+        .map((task) => task.id);
+      const expectedCategoryTasks = new Set(expectedCategoryTaskIds);
+      categoryStatistics[category] = summarizeWeightedRepeats(
+        observations.filter((observation) =>
+          expectedCategoryTasks.has(observation.taskId)
+        ),
+        expectedCategoryTaskIds
+      ).statistics;
+    }
+
     const reports = modelEvents.map((event) => event.report);
     const costs = reports.map((report) => report.metrics.costUsd);
     const everyCostKnown = costs.every((cost) => cost !== null);
@@ -98,6 +124,8 @@ export function aggregateJournal(
       provider: model.provider,
       score: totalWeight === 0 ? 0 : weightedScore / totalWeight,
       categories,
+      scoreStatistics,
+      categoryStatistics,
       metrics: {
         attemptCount: reports.length,
         avgTtftMs: average(reports.map((report) => report.metrics.ttftMs)),
@@ -129,10 +157,12 @@ export function aggregateJournal(
       completedAt,
       modelCount: started.run.models.length,
       repeatCount: started.run.repeatCount,
-      taskCount: started.run.tasks.length
+      taskCount: started.run.tasks.length,
+      concurrency: started.run.concurrency ?? 1,
+      seed: started.run.seed ?? null
     },
     leaderboard,
-    attempts: attempts as AttemptReport[],
+    attempts,
     journalVerified: true,
     sandbox: {
       imageIds: [...imageIds].sort(),

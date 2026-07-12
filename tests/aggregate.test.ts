@@ -19,7 +19,8 @@ function attempt(
   modelId: string,
   taskId: "debug" | "security",
   score: number,
-  costUsd: number | null
+  costUsd: number | null,
+  repeat = 1
 ): JournalPayload {
   const category = taskId === "debug" ? "debugging" : "security";
   return {
@@ -39,7 +40,7 @@ function attempt(
       modelId,
       provider: "fixture",
       providerModel: "fixture-v1",
-      repeat: 1,
+      repeat,
       startedAt: "2026-07-12T00:00:00.000Z",
       completedAt: "2026-07-12T00:00:01.000Z",
       status: score === 1 ? "passed" : "failed",
@@ -70,6 +71,8 @@ describe("aggregateJournal", () => {
         scorerVersion: "1.0.0",
         startedAt: "2026-07-12T00:00:00.000Z",
         repeatCount: 1,
+        concurrency: 3,
+        seed: 42,
         models: [
           { id: "known", label: "Known", model: "fixture-v1", provider: "fixture" },
           { id: "unknown", label: "Unknown", model: "fixture-v1", provider: "fixture" }
@@ -99,9 +102,21 @@ describe("aggregateJournal", () => {
     const unknown = report.leaderboard.find((model) => model.modelId === "unknown");
 
     expect(report.attempts).toHaveLength(4);
+    expect(report.attempts[0]?.taskWeight).toBe(1);
+    expect(report.run).toMatchObject({ concurrency: 3, seed: 42 });
     expect(known).toMatchObject({
       score: 0.625,
       categories: { debugging: 1, security: 0.5 },
+      scoreStatistics: {
+        confidence95: null,
+        sampleCount: 1,
+        standardDeviation: null,
+        standardError: null
+      },
+      categoryStatistics: {
+        debugging: { sampleCount: 1 },
+        security: { sampleCount: 1 }
+      },
       metrics: {
         attemptCount: 2,
         avgTtftMs: 250,
@@ -118,5 +133,48 @@ describe("aggregateJournal", () => {
       totalCostUsd: null
     });
     expect(report.sandbox.imageIds).toEqual(["sha256:image"]);
+  });
+
+  it("computes uncertainty from complete weighted repeats only", () => {
+    const started: JournalPayload = {
+      type: "run.started",
+      configHash: "d".repeat(64),
+      run: {
+        id: "run-repeated",
+        title: "Repeated",
+        suiteId: "demo",
+        scorerVersion: "1.1.0",
+        startedAt: "2026-07-12T00:00:00.000Z",
+        repeatCount: 4,
+        models: [
+          { id: "known", label: "Known", model: "fixture-v1", provider: "fixture" }
+        ],
+        tasks: [
+          { category: "debugging", id: "debug", title: "debug", weight: 1 },
+          { category: "security", id: "security", title: "security", weight: 3 }
+        ]
+      }
+    };
+    const entries = [
+      entry(1, started),
+      entry(2, attempt("known-debug-1", "known", "debug", 0.4, 0, 1)),
+      entry(3, attempt("known-security-1", "known", "security", 0.4, 0, 1)),
+      entry(4, attempt("known-debug-2", "known", "debug", 0.5, 0, 2)),
+      entry(5, attempt("known-security-2", "known", "security", 0.5, 0, 2)),
+      entry(6, attempt("known-debug-3", "known", "debug", 0.6, 0, 3)),
+      entry(7, attempt("known-security-3", "known", "security", 0.6, 0, 3)),
+      entry(8, attempt("known-debug-4", "known", "debug", 1, 0, 4))
+    ];
+
+    const report = aggregateJournal(entries, "2026-07-12T00:00:09.000Z");
+    const model = report.leaderboard[0]!;
+
+    expect(model.score).toBeCloseTo(7 / 13, 12);
+    expect(model.scoreStatistics.sampleCount).toBe(3);
+    expect(model.scoreStatistics.standardDeviation).toBeCloseTo(0.1, 12);
+    expect(model.scoreStatistics.confidence95?.lower).toBeCloseTo(0.251567, 5);
+    expect(model.scoreStatistics.confidence95?.upper).toBeCloseTo(0.748433, 5);
+    expect(model.categoryStatistics.debugging?.sampleCount).toBe(4);
+    expect(model.categoryStatistics.security?.sampleCount).toBe(3);
   });
 });

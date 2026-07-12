@@ -330,6 +330,62 @@ export const AttemptReportSchema = z
   })
   .strict();
 
+export const ReportAttemptSchema = AttemptReportSchema.extend({
+  taskWeight: z.number().positive().max(100).default(1)
+});
+
+export const ScoreStatisticsSchema = z
+  .object({
+    confidence95: z
+      .object({
+        lower: ScoreSchema,
+        upper: ScoreSchema
+      })
+      .strict()
+      .nullable(),
+    sampleCount: z.number().int().nonnegative(),
+    standardDeviation: NullableMetricSchema,
+    standardError: NullableMetricSchema
+  })
+  .strict()
+  .superRefine((statistics, context) => {
+    if (
+      statistics.confidence95 !== null &&
+      statistics.confidence95.lower > statistics.confidence95.upper
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "confidence interval lower bound must not exceed its upper bound",
+        path: ["confidence95", "lower"]
+      });
+    }
+
+    const estimates = [
+      statistics.confidence95,
+      statistics.standardDeviation,
+      statistics.standardError
+    ];
+    const hasAllEstimates = estimates.every((estimate) => estimate !== null);
+    const hasNoEstimates = estimates.every((estimate) => estimate === null);
+    if (
+      (statistics.sampleCount < 2 && !hasNoEstimates) ||
+      (statistics.sampleCount >= 2 && !hasAllEstimates)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "uncertainty estimates require at least two samples",
+        path: ["sampleCount"]
+      });
+    }
+  });
+
+const EMPTY_SCORE_STATISTICS = {
+  confidence95: null,
+  sampleCount: 0,
+  standardDeviation: null,
+  standardError: null
+} as const;
+
 const ModelReportSchema = z
   .object({
     modelId: SlugSchema,
@@ -337,6 +393,10 @@ const ModelReportSchema = z
     provider: ProviderNameSchema,
     score: ScoreSchema,
     categories: z.partialRecord(BenchmarkCategorySchema, ScoreSchema),
+    scoreStatistics: ScoreStatisticsSchema.default(EMPTY_SCORE_STATISTICS),
+    categoryStatistics: z
+      .partialRecord(BenchmarkCategorySchema, ScoreStatisticsSchema)
+      .default({}),
     metrics: z
       .object({
         attemptCount: z.number().int().nonnegative(),
@@ -363,11 +423,13 @@ export const ReportSchema = z
         completedAt: DateTimeSchema.nullable(),
         modelCount: z.number().int().nonnegative(),
         repeatCount: z.number().int().positive(),
-        taskCount: z.number().int().nonnegative()
+        taskCount: z.number().int().nonnegative(),
+        concurrency: z.number().int().min(1).max(8).default(1),
+        seed: z.number().int().min(0).max(4_294_967_295).nullable().default(null)
       })
       .strict(),
     leaderboard: z.array(ModelReportSchema),
-    attempts: z.array(AttemptReportSchema),
+    attempts: z.array(ReportAttemptSchema),
     journalVerified: z.boolean(),
     sandbox: z
       .object({
@@ -387,5 +449,7 @@ export type ModelConfig = z.infer<typeof ModelSchema>;
 export type ModelConfigFile = z.infer<typeof ModelConfigFileSchema>;
 export type ProviderName = z.infer<typeof ProviderNameSchema>;
 export type Report = z.infer<typeof ReportSchema>;
+export type ReportAttempt = z.infer<typeof ReportAttemptSchema>;
+export type ReportScoreStatistics = z.infer<typeof ScoreStatisticsSchema>;
 export type Suite = z.infer<typeof SuiteSchema>;
 export type Task = z.infer<typeof TaskSchema>;

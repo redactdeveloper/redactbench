@@ -8,6 +8,7 @@ import { loadYamlConfig } from "../src/config.js";
 import {
   ModelConfigFileSchema,
   ReportSchema,
+  ScoreStatisticsSchema,
   SuiteSchema,
   TaskSchema
 } from "../src/contracts.js";
@@ -231,6 +232,43 @@ describe("ReportSchema", () => {
 
     expect(report.leaderboard[0]?.metrics.avgTtftMs).toBeNull();
     expect(report.leaderboard[0]?.metrics.totalCostUsd).toBeNull();
+    expect(report.run).toMatchObject({ concurrency: 1, seed: null });
+    expect(report.leaderboard[0]?.scoreStatistics).toEqual({
+      confidence95: null,
+      sampleCount: 0,
+      standardDeviation: null,
+      standardError: null
+    });
+    expect(report.leaderboard[0]?.categoryStatistics).toEqual({});
+  });
+});
+
+describe("ScoreStatisticsSchema", () => {
+  it("rejects internally inconsistent uncertainty metadata", () => {
+    expect(
+      ScoreStatisticsSchema.safeParse({
+        confidence95: { lower: 0.8, upper: 0.2 },
+        sampleCount: 3,
+        standardDeviation: 0.1,
+        standardError: 0.05
+      }).success
+    ).toBe(false);
+    expect(
+      ScoreStatisticsSchema.safeParse({
+        confidence95: null,
+        sampleCount: 3,
+        standardDeviation: null,
+        standardError: null
+      }).success
+    ).toBe(false);
+    expect(
+      ScoreStatisticsSchema.safeParse({
+        confidence95: null,
+        sampleCount: 1,
+        standardDeviation: null,
+        standardError: null
+      }).success
+    ).toBe(true);
   });
 });
 
