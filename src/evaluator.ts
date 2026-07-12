@@ -6,12 +6,20 @@ import {
   type SandboxExecution,
   type SandboxRunner
 } from "./sandbox/docker.js";
+import {
+  createIsolatedWorkspace,
+  type IsolatedWorkspace
+} from "./workspace.js";
 
 export interface EvaluationResult {
   checks: CheckResult[];
   imageIds: string[];
   score: number;
 }
+
+export type WorkspaceFactory = (
+  sourceDirectory: string
+) => Promise<IsolatedWorkspace>;
 
 function statusFor(execution: SandboxExecution): CheckResult["status"] {
   if (execution.timedOut) {
@@ -62,17 +70,30 @@ function failedExecution(error: unknown): SandboxExecution {
 export async function evaluateChecks(
   checks: readonly EvaluatorCheck[],
   context: SandboxContext,
-  sandbox: SandboxRunner = runDockerCheck
+  sandbox: SandboxRunner = runDockerCheck,
+  workspaceFactory: WorkspaceFactory = createIsolatedWorkspace
 ): Promise<EvaluationResult> {
   const results: CheckResult[] = [];
   const imageIds = new Set<string>();
 
   for (const check of checks) {
     let execution: SandboxExecution;
+    let isolatedWorkspace: IsolatedWorkspace | null = null;
     try {
-      execution = await sandbox(check, context);
+      isolatedWorkspace = await workspaceFactory(context.workspaceDirectory);
+      execution = await sandbox(check, {
+        evaluatorDirectory: context.evaluatorDirectory,
+        workspaceDirectory: isolatedWorkspace.directory
+      });
     } catch (error) {
       execution = failedExecution(error);
+    }
+    if (isolatedWorkspace) {
+      try {
+        await isolatedWorkspace.cleanup();
+      } catch (error) {
+        execution = failedExecution(error);
+      }
     }
     if (execution.imageId) {
       imageIds.add(execution.imageId);
