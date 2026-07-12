@@ -1,0 +1,29 @@
+schemaVersion: 1
+id: order-watermarked-events
+title: Order an event-time stream behind a watermark
+category: algorithms
+description: Repair a bounded-lateness buffer that emits events deterministically while suppressing duplicates and late arrivals.
+prompt: |
+  EventTimeBuffer currently forwards every event in arrival order. Implement bounded event-time ordering behind a watermark. push(event) updates maxSeenAt, defines watermark = maxSeenAt - maxLatenessMs, drops events older than the watermark, suppresses duplicate IDs after the first accepted event, and returns every buffered event at or below the watermark ordered by at and then id. finish() returns the remaining events in the same order and closes the buffer. Preserve the constructor and methods, reject malformed events and calls after finish(), and do not mutate event objects.
+tags: [gold, javascript, streaming, watermark]
+checks:
+  - id: bounded-reordering
+    label: Reorders events only when the watermark makes them safe
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, reorder]
+    weight: 3
+  - id: deterministic-ties
+    label: Resolves equal event times by ID
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, ties]
+    weight: 2
+  - id: late-and-duplicate
+    label: Suppresses late arrivals and repeated event IDs
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, late-dedupe]
+    weight: 3
+  - id: finish-contract
+    label: Flushes deterministically without mutating input
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, finish-contract]
+    weight: 2
