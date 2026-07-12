@@ -76,7 +76,7 @@ describe("CLI", () => {
 
     const version = outputBuffer();
     expect(await main(["--version"], { stdout: version.stream })).toBe(0);
-    expect(version.value()).toBe("0.1.0\n");
+    expect(version.value()).toBe("0.2.0\n");
   });
 
   it("validates suite, task and model files without running Docker", async () => {

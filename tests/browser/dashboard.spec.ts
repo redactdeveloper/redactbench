@@ -15,7 +15,7 @@ test("renders real report data without browser errors or page overflow", async (
   });
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Run 2026-07-11 / demo");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Run 2026-07-12 / demo");
   await expect(page.getByLabel("Overall score: 100.0%")).toBeVisible();
   await expect(page.getByRole("button", { exact: true, name: "Fixture Strong" })).toHaveAttribute("aria-pressed", "true");
 
@@ -71,7 +71,7 @@ test("renders real report data without browser errors or page overflow", async (
   }
 
   await page.getByRole("button", { exact: true, name: "Fixture Fast" }).click();
-  await expect(page.getByLabel("Overall score: 62.2%")).toBeVisible();
+  await expect(page.getByLabel("Overall score: 59.1%")).toBeVisible();
   await page.getByLabel("Category filter").selectOption("context-recovery");
   await expect(page.getByLabel("Overall score: 66.7%")).toBeVisible();
 

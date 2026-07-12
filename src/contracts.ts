@@ -173,7 +173,7 @@ export const SuiteSchema = z
     id: SlugSchema,
     title: LabelSchema,
     description: z.string().trim().max(MAX_CONFIG_TEXT).optional(),
-    scorerVersion: z.string().trim().min(1).max(64).default("1.0.0"),
+    scorerVersion: z.string().trim().min(1).max(64).default("1.1.0"),
     tasks: z.array(SuiteTaskSchema).min(1).max(1_000)
   })
   .strict()

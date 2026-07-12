@@ -1,6 +1,6 @@
 {
   "name": "redactbench",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A reproducible direct-provider coding model benchmark with isolated hidden checks and context recovery.",
   "type": "module",

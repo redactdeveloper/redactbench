@@ -1,15 +1,17 @@
 {
   "schemaVersion": 1,
-  "scorerVersion": "1.0.0",
-  "generatedAt": "2026-07-11T23:18:07.421Z",
+  "scorerVersion": "1.1.0",
+  "generatedAt": "2026-07-12T00:42:24.581Z",
   "run": {
     "id": "demo",
     "title": "RedactBench Demo",
-    "startedAt": "2026-07-11T23:17:35.712Z",
-    "completedAt": "2026-07-11T23:17:47.297Z",
+    "startedAt": "2026-07-12T00:41:47.131Z",
+    "completedAt": "2026-07-12T00:42:24.578Z",
     "modelCount": 3,
     "repeatCount": 1,
-    "taskCount": 3
+    "taskCount": 8,
+    "concurrency": 1,
+    "seed": null
   },
   "leaderboard": [
     {
@@ -18,59 +20,373 @@
       "provider": "fixture",
       "score": 1,
       "categories": {
+        "algorithms": 1,
         "debugging": 1,
+        "refactoring": 1,
+        "security": 1,
+        "ui": 1,
+        "reasoning": 1,
         "hallucination": 1,
         "context-recovery": 1
       },
+      "scoreStatistics": {
+        "confidence95": null,
+        "sampleCount": 1,
+        "standardDeviation": null,
+        "standardError": null
+      },
+      "categoryStatistics": {
+        "algorithms": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "debugging": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "refactoring": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "security": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "ui": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "reasoning": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "hallucination": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "context-recovery": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        }
+      },
       "metrics": {
-        "attemptCount": 3,
-        "avgTtftMs": 680,
-        "correctCount": 3,
-        "costPerCorrectUsd": 0.0011026666666666667,
-        "outputTokensPerSecond": 80.92964832608351,
-        "totalCostUsd": 0.003308
+        "attemptCount": 8,
+        "avgTtftMs": 703.75,
+        "correctCount": 8,
+        "costPerCorrectUsd": 0.0010605,
+        "outputTokensPerSecond": 100.76744539540523,
+        "totalCostUsd": 0.008484
       }
     },
     {
       "modelId": "fixture-fast",
       "label": "Fixture Fast",
       "provider": "fixture",
-      "score": 0.6222222222222222,
+      "score": 0.591220238095238,
       "categories": {
+        "algorithms": 0.6666666666666666,
         "debugging": 0.6,
+        "refactoring": 0.375,
+        "security": 0.625,
+        "ui": 0.625,
+        "reasoning": 0.5714285714285714,
         "hallucination": 0.6,
         "context-recovery": 0.6666666666666666
       },
+      "scoreStatistics": {
+        "confidence95": null,
+        "sampleCount": 1,
+        "standardDeviation": null,
+        "standardError": null
+      },
+      "categoryStatistics": {
+        "algorithms": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "debugging": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "refactoring": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "security": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "ui": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "reasoning": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "hallucination": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "context-recovery": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        }
+      },
       "metrics": {
-        "attemptCount": 3,
-        "avgTtftMs": 248.33333333333334,
+        "attemptCount": 8,
+        "avgTtftMs": 245,
         "correctCount": 0,
         "costPerCorrectUsd": null,
-        "outputTokensPerSecond": 134.3840579710145,
-        "totalCostUsd": 0.0006889999999999999
+        "outputTokensPerSecond": 175.69622348286734,
+        "totalCostUsd": 0.0017334999999999998
       }
     },
     {
       "modelId": "fixture-cautious",
       "label": "Fixture Cautious",
       "provider": "fixture",
-      "score": 0.37777777777777777,
+      "score": 0.32395833333333335,
       "categories": {
+        "algorithms": 0.3333333333333333,
         "debugging": 0.8,
+        "refactoring": 0.25,
+        "security": 0.5,
+        "ui": 0.375,
+        "reasoning": 0,
         "hallucination": 0,
         "context-recovery": 0.3333333333333333
       },
+      "scoreStatistics": {
+        "confidence95": null,
+        "sampleCount": 1,
+        "standardDeviation": null,
+        "standardError": null
+      },
+      "categoryStatistics": {
+        "algorithms": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "debugging": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "refactoring": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "security": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "ui": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "reasoning": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "hallucination": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        },
+        "context-recovery": {
+          "confidence95": null,
+          "sampleCount": 1,
+          "standardDeviation": null,
+          "standardError": null
+        }
+      },
       "metrics": {
-        "attemptCount": 3,
-        "avgTtftMs": 1026.6666666666667,
+        "attemptCount": 8,
+        "avgTtftMs": 1036.25,
         "correctCount": 0,
         "costPerCorrectUsd": null,
-        "outputTokensPerSecond": 57.46337567673544,
-        "totalCostUsd": 0.0016055000000000002
+        "outputTokensPerSecond": 58.463080113736254,
+        "totalCostUsd": 0.003459
       }
     }
   ],
   "attempts": [
+    {
+      "attemptId": "demo:accessible-disclosure:fixture-cautious:1",
+      "taskId": "accessible-disclosure",
+      "taskTitle": "Build an accessible disclosure",
+      "category": "ui",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:10.008Z",
+      "completedAt": "2026-07-12T00:42:11.545Z",
+      "status": "failed",
+      "score": 0.375,
+      "metrics": {
+        "costUsd": 0.0004495,
+        "durationMs": 1537,
+        "inputTokens": 435,
+        "outputTokens": 116,
+        "outputTokensPerSecond": 82.2695035460993,
+        "ttftMs": 1050
+      },
+      "checks": [
+        {
+          "id": "semantic-control",
+          "label": "Uses a native button",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 333,
+          "exitCode": 1,
+          "output": "UI scenario failed: semantic\n"
+        },
+        {
+          "id": "accessible-initial-state",
+          "label": "Declares initial state",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 340,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "synchronized-interaction",
+          "label": "Synchronizes disclosure state",
+          "status": "failed",
+          "weight": 3,
+          "durationMs": 302,
+          "exitCode": 1,
+          "output": "UI scenario failed: behavior\n"
+        },
+        {
+          "id": "event-hygiene",
+          "label": "Avoids inline handlers",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 336,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:contain-document-reads:fixture-cautious:1",
+      "taskId": "contain-document-reads",
+      "taskTitle": "Contain document reads",
+      "category": "security",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:04.773Z",
+      "completedAt": "2026-07-12T00:42:06.797Z",
+      "status": "failed",
+      "score": 0.5,
+      "metrics": {
+        "costUsd": 0.000439,
+        "durationMs": 2024,
+        "inputTokens": 470,
+        "outputTokens": 102,
+        "outputTokensPerSecond": 68.45637583892618,
+        "ttftMs": 1090
+      },
+      "checks": [
+        {
+          "id": "valid-contained-files",
+          "label": "Reads contained files",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 353,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "traversal-rejection",
+          "label": "Rejects parent traversal",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 365,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "absolute-rejection",
+          "label": "Rejects absolute paths",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 294,
+          "exitCode": 1,
+          "output": "Security scenario failed: absolute\n"
+        },
+        {
+          "id": "symlink-containment",
+          "label": "Rejects symlink escape",
+          "status": "failed",
+          "weight": 3,
+          "durationMs": 347,
+          "exitCode": 1,
+          "output": "Security scenario failed: symlink\n"
+        },
+        {
+          "id": "invalid-input",
+          "label": "Handles missing and NUL input",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 367,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
+    },
     {
       "attemptId": "demo:debug-get-user:fixture-cautious:1",
       "taskId": "debug-get-user",
@@ -80,13 +396,13 @@
       "provider": "fixture",
       "providerModel": "fixture-cautious-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:38.738Z",
-      "completedAt": "2026-07-11T23:17:39.992Z",
+      "startedAt": "2026-07-12T00:41:54.901Z",
+      "completedAt": "2026-07-12T00:41:56.365Z",
       "status": "failed",
       "score": 0.8,
       "metrics": {
         "costUsd": 0.000377,
-        "durationMs": 1254,
+        "durationMs": 1464,
         "inputTokens": 410,
         "outputTokens": 86,
         "outputTokensPerSecond": 60.13986013986014,
@@ -98,7 +414,7 @@
           "label": "Ordered IDs",
           "status": "passed",
           "weight": 1,
-          "durationMs": 273,
+          "durationMs": 309,
           "exitCode": 0,
           "output": ""
         },
@@ -107,7 +423,7 @@
           "label": "Sparse IDs",
           "status": "passed",
           "weight": 2,
-          "durationMs": 286,
+          "durationMs": 341,
           "exitCode": 0,
           "output": ""
         },
@@ -116,7 +432,7 @@
           "label": "Missing user",
           "status": "failed",
           "weight": 1,
-          "durationMs": 266,
+          "durationMs": 318,
           "exitCode": 1,
           "output": "Scenario failed: missing\n"
         },
@@ -125,11 +441,134 @@
           "label": "Empty array",
           "status": "passed",
           "weight": 1,
-          "durationMs": 273,
+          "durationMs": 296,
           "exitCode": 0,
           "output": ""
         }
-      ]
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:explain-tenant-cache-collision:fixture-cautious:1",
+      "taskId": "explain-tenant-cache-collision",
+      "taskTitle": "Explain a cross-tenant cache bug",
+      "category": "reasoning",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:14.536Z",
+      "completedAt": "2026-07-12T00:42:16.064Z",
+      "status": "failed",
+      "score": 0,
+      "metrics": {
+        "costUsd": 0.0002825,
+        "durationMs": 1528,
+        "inputTokens": 465,
+        "outputTokens": 25,
+        "outputTokensPerSecond": 23.58490566037736,
+        "ttftMs": 1080
+      },
+      "checks": [
+        {
+          "id": "root-cause",
+          "label": "Identifies tenant key collision",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 312,
+          "exitCode": 1,
+          "output": "Reasoning evidence failed: cause\n"
+        },
+        {
+          "id": "cross-file-evidence",
+          "label": "Cites both files and functions",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 352,
+          "exitCode": 1,
+          "output": "Reasoning evidence failed: evidence\n"
+        },
+        {
+          "id": "robust-fix",
+          "label": "Proposes a composite key",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 349,
+          "exitCode": 1,
+          "output": "Reasoning evidence failed: fix\n"
+        },
+        {
+          "id": "regression-proof",
+          "label": "Specifies a cross-tenant test",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 296,
+          "exitCode": 1,
+          "output": "Reasoning evidence failed: regression\n"
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:isolate-request-id-state:fixture-cautious:1",
+      "taskId": "isolate-request-id-state",
+      "taskTitle": "Refactor request ID state",
+      "category": "refactoring",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:41:59.383Z",
+      "completedAt": "2026-07-12T00:42:00.868Z",
+      "status": "failed",
+      "score": 0.25,
+      "metrics": {
+        "costUsd": 0.000339,
+        "durationMs": 1485,
+        "inputTokens": 350,
+        "outputTokens": 82,
+        "outputTokensPerSecond": 61.65413533834586,
+        "ttftMs": 1010
+      },
+      "checks": [
+        {
+          "id": "sequence-behavior",
+          "label": "Preserves sequential behavior",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 305,
+          "exitCode": 1,
+          "output": "Refactoring scenario failed: sequence\n"
+        },
+        {
+          "id": "instance-isolation",
+          "label": "Isolates generator instances",
+          "status": "failed",
+          "weight": 3,
+          "durationMs": 310,
+          "exitCode": 1,
+          "output": "Refactoring scenario failed: isolation\n"
+        },
+        {
+          "id": "structural-state",
+          "label": "Removes module mutable state",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 346,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "output-contract",
+          "label": "Preserves prefix formatting",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 309,
+          "exitCode": 1,
+          "output": "Refactoring scenario failed: prefix\n"
+        }
+      ],
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:recover-port-utils:fixture-cautious:1",
@@ -140,13 +579,13 @@
       "provider": "fixture",
       "providerModel": "fixture-cautious-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:45.865Z",
-      "completedAt": "2026-07-11T23:17:47.290Z",
+      "startedAt": "2026-07-12T00:42:22.846Z",
+      "completedAt": "2026-07-12T00:42:24.571Z",
       "status": "failed",
       "score": 0.3333333333333333,
       "metrics": {
         "costUsd": 0.001085,
-        "durationMs": 1425,
+        "durationMs": 1725,
         "inputTokens": 1150,
         "outputTokens": 255,
         "outputTokensPerSecond": 76.80722891566265,
@@ -158,7 +597,7 @@
           "label": "Parses valid ports",
           "status": "passed",
           "weight": 1,
-          "durationMs": 281,
+          "durationMs": 327,
           "exitCode": 0,
           "output": ""
         },
@@ -167,7 +606,7 @@
           "label": "Rejects malformed ports",
           "status": "failed",
           "weight": 2,
-          "durationMs": 294,
+          "durationMs": 357,
           "exitCode": 1,
           "output": "Recovery scenario failed: parse-invalid\n"
         },
@@ -176,7 +615,7 @@
           "label": "Formats valid ports",
           "status": "passed",
           "weight": 1,
-          "durationMs": 269,
+          "durationMs": 320,
           "exitCode": 0,
           "output": ""
         },
@@ -185,7 +624,7 @@
           "label": "Rejects invalid formatting input",
           "status": "passed",
           "weight": 2,
-          "durationMs": 280,
+          "durationMs": 294,
           "exitCode": 0,
           "output": ""
         }
@@ -197,7 +636,8 @@
         "notesTotal": 8,
         "recoveryMs": 2760,
         "rollbackDetected": true
-      }
+      },
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:reject-false-find-premise:fixture-cautious:1",
@@ -208,13 +648,13 @@
       "provider": "fixture",
       "providerModel": "fixture-cautious-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:41.902Z",
-      "completedAt": "2026-07-11T23:17:42.935Z",
+      "startedAt": "2026-07-12T00:42:18.268Z",
+      "completedAt": "2026-07-12T00:42:19.512Z",
       "status": "failed",
       "score": 0,
       "metrics": {
         "costUsd": 0.0001435,
-        "durationMs": 1033,
+        "durationMs": 1244,
         "inputTokens": 175,
         "outputTokens": 28,
         "outputTokensPerSecond": 35.44303797468354,
@@ -226,7 +666,7 @@
           "label": "Rejects premise",
           "status": "failed",
           "weight": 2,
-          "durationMs": 303,
+          "durationMs": 358,
           "exitCode": 1,
           "output": "Evidence check failed: pushback\n"
         },
@@ -235,7 +675,7 @@
           "label": "Names undefined result",
           "status": "failed",
           "weight": 2,
-          "durationMs": 288,
+          "durationMs": 378,
           "exitCode": 1,
           "output": "Evidence check failed: undefined\n"
         },
@@ -244,11 +684,204 @@
           "label": "Gives actionable evidence",
           "status": "failed",
           "weight": 1,
-          "durationMs": 305,
+          "durationMs": 324,
           "exitCode": 1,
           "output": "Evidence check failed: evidence\n"
         }
-      ]
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:top-k-frequent:fixture-cautious:1",
+      "taskId": "top-k-frequent",
+      "taskTitle": "Implement deterministic top-k frequency",
+      "category": "algorithms",
+      "modelId": "fixture-cautious",
+      "provider": "fixture",
+      "providerModel": "fixture-cautious-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:41:50.344Z",
+      "completedAt": "2026-07-12T00:41:51.789Z",
+      "status": "failed",
+      "score": 0.3333333333333333,
+      "metrics": {
+        "costUsd": 0.0003435,
+        "durationMs": 1445,
+        "inputTokens": 395,
+        "outputTokens": 73,
+        "outputTokensPerSecond": 59.34959349593496,
+        "ttftMs": 980
+      },
+      "checks": [
+        {
+          "id": "frequency-ranking",
+          "label": "Ranks by frequency",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 305,
+          "exitCode": 1,
+          "output": "Algorithm scenario failed: frequency\n"
+        },
+        {
+          "id": "deterministic-ties",
+          "label": "Resolves ties deterministically",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 291,
+          "exitCode": 1,
+          "output": "Algorithm scenario failed: ties\n"
+        },
+        {
+          "id": "edge-cases",
+          "label": "Handles k and empty inputs",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 344,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "input-immutability",
+          "label": "Preserves the input array",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 278,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:accessible-disclosure:fixture-fast:1",
+      "taskId": "accessible-disclosure",
+      "taskTitle": "Build an accessible disclosure",
+      "category": "ui",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:08.338Z",
+      "completedAt": "2026-07-12T00:42:10.004Z",
+      "status": "failed",
+      "score": 0.625,
+      "metrics": {
+        "costUsd": 0.00021425,
+        "durationMs": 1666,
+        "inputTokens": 425,
+        "outputTokens": 108,
+        "outputTokensPerSecond": 211.76470588235293,
+        "ttftMs": 230
+      },
+      "checks": [
+        {
+          "id": "semantic-control",
+          "label": "Uses a native button",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 307,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "accessible-initial-state",
+          "label": "Declares initial state",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 346,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "synchronized-interaction",
+          "label": "Synchronizes disclosure state",
+          "status": "failed",
+          "weight": 3,
+          "durationMs": 404,
+          "exitCode": 1,
+          "output": "UI scenario failed: behavior\n"
+        },
+        {
+          "id": "event-hygiene",
+          "label": "Avoids inline handlers",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 378,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:contain-document-reads:fixture-fast:1",
+      "taskId": "contain-document-reads",
+      "taskTitle": "Contain document reads",
+      "category": "security",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:02.883Z",
+      "completedAt": "2026-07-12T00:42:04.763Z",
+      "status": "failed",
+      "score": 0.625,
+      "metrics": {
+        "costUsd": 0.00026225,
+        "durationMs": 1880,
+        "inputTokens": 485,
+        "outputTokens": 141,
+        "outputTokensPerSecond": 229.26829268292684,
+        "ttftMs": 275
+      },
+      "checks": [
+        {
+          "id": "valid-contained-files",
+          "label": "Reads contained files",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 333,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "traversal-rejection",
+          "label": "Rejects parent traversal",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 317,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "absolute-rejection",
+          "label": "Rejects absolute paths",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 329,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "symlink-containment",
+          "label": "Rejects symlink escape",
+          "status": "failed",
+          "weight": 3,
+          "durationMs": 308,
+          "exitCode": 1,
+          "output": "Security scenario failed: symlink\n"
+        },
+        {
+          "id": "invalid-input",
+          "label": "Handles missing and NUL input",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 315,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:debug-get-user:fixture-fast:1",
@@ -259,13 +892,13 @@
       "provider": "fixture",
       "providerModel": "fixture-fast-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:37.478Z",
-      "completedAt": "2026-07-11T23:17:38.734Z",
+      "startedAt": "2026-07-12T00:41:53.306Z",
+      "completedAt": "2026-07-12T00:41:54.896Z",
       "status": "failed",
       "score": 0.6,
       "metrics": {
         "costUsd": 0.0001675,
-        "durationMs": 1256,
+        "durationMs": 1590,
         "inputTokens": 390,
         "outputTokens": 70,
         "outputTokensPerSecond": 152.17391304347825,
@@ -277,7 +910,7 @@
           "label": "Ordered IDs",
           "status": "passed",
           "weight": 1,
-          "durationMs": 262,
+          "durationMs": 332,
           "exitCode": 0,
           "output": ""
         },
@@ -286,7 +919,7 @@
           "label": "Sparse IDs",
           "status": "passed",
           "weight": 2,
-          "durationMs": 271,
+          "durationMs": 299,
           "exitCode": 0,
           "output": ""
         },
@@ -295,7 +928,7 @@
           "label": "Missing user",
           "status": "failed",
           "weight": 1,
-          "durationMs": 297,
+          "durationMs": 359,
           "exitCode": 1,
           "output": "Scenario failed: missing\n"
         },
@@ -304,11 +937,134 @@
           "label": "Empty array",
           "status": "failed",
           "weight": 1,
-          "durationMs": 244,
+          "durationMs": 364,
           "exitCode": 1,
           "output": "Scenario failed: empty\n"
         }
-      ]
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:explain-tenant-cache-collision:fixture-fast:1",
+      "taskId": "explain-tenant-cache-collision",
+      "taskTitle": "Explain a cross-tenant cache bug",
+      "category": "reasoning",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:13.079Z",
+      "completedAt": "2026-07-12T00:42:14.533Z",
+      "status": "failed",
+      "score": 0.5714285714285714,
+      "metrics": {
+        "costUsd": 0.0001535,
+        "durationMs": 1454,
+        "inputTokens": 470,
+        "outputTokens": 36,
+        "outputTokensPerSecond": 96,
+        "ttftMs": 245
+      },
+      "checks": [
+        {
+          "id": "root-cause",
+          "label": "Identifies tenant key collision",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 314,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "cross-file-evidence",
+          "label": "Cites both files and functions",
+          "status": "failed",
+          "weight": 1,
+          "durationMs": 291,
+          "exitCode": 1,
+          "output": "Reasoning evidence failed: evidence\n"
+        },
+        {
+          "id": "robust-fix",
+          "label": "Proposes a composite key",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 303,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "regression-proof",
+          "label": "Specifies a cross-tenant test",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 334,
+          "exitCode": 1,
+          "output": "Reasoning evidence failed: regression\n"
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:isolate-request-id-state:fixture-fast:1",
+      "taskId": "isolate-request-id-state",
+      "taskTitle": "Refactor request ID state",
+      "category": "refactoring",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:41:57.947Z",
+      "completedAt": "2026-07-12T00:41:59.378Z",
+      "status": "failed",
+      "score": 0.375,
+      "metrics": {
+        "costUsd": 0.00019125,
+        "durationMs": 1431,
+        "inputTokens": 345,
+        "outputTokens": 105,
+        "outputTokensPerSecond": 230.76923076923077,
+        "ttftMs": 225
+      },
+      "checks": [
+        {
+          "id": "sequence-behavior",
+          "label": "Preserves sequential behavior",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 295,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "instance-isolation",
+          "label": "Isolates generator instances",
+          "status": "failed",
+          "weight": 3,
+          "durationMs": 303,
+          "exitCode": 1,
+          "output": "Refactoring scenario failed: isolation\n"
+        },
+        {
+          "id": "structural-state",
+          "label": "Removes module mutable state",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 307,
+          "exitCode": 1,
+          "output": "Refactoring scenario failed: structure\n"
+        },
+        {
+          "id": "output-contract",
+          "label": "Preserves prefix formatting",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 307,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:recover-port-utils:fixture-fast:1",
@@ -319,13 +1075,13 @@
       "provider": "fixture",
       "providerModel": "fixture-fast-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:44.486Z",
-      "completedAt": "2026-07-11T23:17:45.857Z",
+      "startedAt": "2026-07-12T00:42:21.147Z",
+      "completedAt": "2026-07-12T00:42:22.834Z",
       "status": "failed",
       "score": 0.6666666666666666,
       "metrics": {
         "costUsd": 0.00045799999999999997,
-        "durationMs": 1371,
+        "durationMs": 1687,
         "inputTokens": 1080,
         "outputTokens": 188,
         "outputTokensPerSecond": 163.47826086956522,
@@ -337,7 +1093,7 @@
           "label": "Parses valid ports",
           "status": "passed",
           "weight": 1,
-          "durationMs": 287,
+          "durationMs": 317,
           "exitCode": 0,
           "output": ""
         },
@@ -346,7 +1102,7 @@
           "label": "Rejects malformed ports",
           "status": "failed",
           "weight": 2,
-          "durationMs": 268,
+          "durationMs": 282,
           "exitCode": 1,
           "output": "Recovery scenario failed: parse-invalid\n"
         },
@@ -355,7 +1111,7 @@
           "label": "Formats valid ports",
           "status": "passed",
           "weight": 1,
-          "durationMs": 280,
+          "durationMs": 324,
           "exitCode": 0,
           "output": ""
         },
@@ -364,7 +1120,7 @@
           "label": "Rejects invalid formatting input",
           "status": "passed",
           "weight": 2,
-          "durationMs": 269,
+          "durationMs": 373,
           "exitCode": 0,
           "output": ""
         }
@@ -376,7 +1132,8 @@
         "notesTotal": 13,
         "recoveryMs": 810,
         "rollbackDetected": false
-      }
+      },
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:reject-false-find-premise:fixture-fast:1",
@@ -387,13 +1144,13 @@
       "provider": "fixture",
       "providerModel": "fixture-fast-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:40.934Z",
-      "completedAt": "2026-07-11T23:17:41.895Z",
+      "startedAt": "2026-07-12T00:42:17.141Z",
+      "completedAt": "2026-07-12T00:42:18.258Z",
       "status": "failed",
       "score": 0.6,
       "metrics": {
         "costUsd": 0.0000635,
-        "durationMs": 961,
+        "durationMs": 1117,
         "inputTokens": 170,
         "outputTokens": 21,
         "outputTokensPerSecond": 87.5,
@@ -405,7 +1162,7 @@
           "label": "Rejects premise",
           "status": "failed",
           "weight": 2,
-          "durationMs": 294,
+          "durationMs": 322,
           "exitCode": 1,
           "output": "Evidence check failed: pushback\n"
         },
@@ -414,7 +1171,7 @@
           "label": "Names undefined result",
           "status": "passed",
           "weight": 2,
-          "durationMs": 268,
+          "durationMs": 318,
           "exitCode": 0,
           "output": ""
         },
@@ -423,11 +1180,204 @@
           "label": "Gives actionable evidence",
           "status": "passed",
           "weight": 1,
-          "durationMs": 272,
+          "durationMs": 331,
           "exitCode": 0,
           "output": ""
         }
-      ]
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:top-k-frequent:fixture-fast:1",
+      "taskId": "top-k-frequent",
+      "taskTitle": "Implement deterministic top-k frequency",
+      "category": "algorithms",
+      "modelId": "fixture-fast",
+      "provider": "fixture",
+      "providerModel": "fixture-fast-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:41:48.779Z",
+      "completedAt": "2026-07-12T00:41:50.338Z",
+      "status": "failed",
+      "score": 0.6666666666666666,
+      "metrics": {
+        "costUsd": 0.00022325,
+        "durationMs": 1559,
+        "inputTokens": 405,
+        "outputTokens": 122,
+        "outputTokensPerSecond": 234.6153846153846,
+        "ttftMs": 240
+      },
+      "checks": [
+        {
+          "id": "frequency-ranking",
+          "label": "Ranks by frequency",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 372,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "deterministic-ties",
+          "label": "Resolves ties deterministically",
+          "status": "failed",
+          "weight": 2,
+          "durationMs": 399,
+          "exitCode": 1,
+          "output": "Algorithm scenario failed: ties\n"
+        },
+        {
+          "id": "edge-cases",
+          "label": "Handles k and empty inputs",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 269,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "input-immutability",
+          "label": "Preserves the input array",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 292,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:accessible-disclosure:fixture-strong:1",
+      "taskId": "accessible-disclosure",
+      "taskTitle": "Build an accessible disclosure",
+      "category": "ui",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:06.802Z",
+      "completedAt": "2026-07-12T00:42:08.332Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.001072,
+        "durationMs": 1530,
+        "inputTokens": 460,
+        "outputTokens": 153,
+        "outputTokensPerSecond": 115.9090909090909,
+        "ttftMs": 720
+      },
+      "checks": [
+        {
+          "id": "semantic-control",
+          "label": "Uses a native button",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 377,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "accessible-initial-state",
+          "label": "Declares initial state",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 316,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "synchronized-interaction",
+          "label": "Synchronizes disclosure state",
+          "status": "passed",
+          "weight": 3,
+          "durationMs": 346,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "event-hygiene",
+          "label": "Avoids inline handlers",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 284,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:contain-document-reads:fixture-strong:1",
+      "taskId": "contain-document-reads",
+      "taskTitle": "Contain document reads",
+      "category": "security",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:00.874Z",
+      "completedAt": "2026-07-12T00:42:02.878Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.001244,
+        "durationMs": 2004,
+        "inputTokens": 520,
+        "outputTokens": 181,
+        "outputTokensPerSecond": 120.66666666666667,
+        "ttftMs": 780
+      },
+      "checks": [
+        {
+          "id": "valid-contained-files",
+          "label": "Reads contained files",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 373,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "traversal-rejection",
+          "label": "Rejects parent traversal",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 329,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "absolute-rejection",
+          "label": "Rejects absolute paths",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 349,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "symlink-containment",
+          "label": "Rejects symlink escape",
+          "status": "passed",
+          "weight": 3,
+          "durationMs": 343,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "invalid-input",
+          "label": "Handles missing and NUL input",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 297,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:debug-get-user:fixture-strong:1",
@@ -438,13 +1388,13 @@
       "provider": "fixture",
       "providerModel": "fixture-strong-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:35.721Z",
-      "completedAt": "2026-07-11T23:17:37.473Z",
+      "startedAt": "2026-07-12T00:41:51.793Z",
+      "completedAt": "2026-07-12T00:41:53.301Z",
       "status": "passed",
       "score": 1,
       "metrics": {
         "costUsd": 0.000772,
-        "durationMs": 1752,
+        "durationMs": 1508,
         "inputTokens": 420,
         "outputTokens": 88,
         "outputTokensPerSecond": 77.87610619469027,
@@ -456,7 +1406,7 @@
           "label": "Ordered IDs",
           "status": "passed",
           "weight": 1,
-          "durationMs": 733,
+          "durationMs": 301,
           "exitCode": 0,
           "output": ""
         },
@@ -465,7 +1415,7 @@
           "label": "Sparse IDs",
           "status": "passed",
           "weight": 2,
-          "durationMs": 256,
+          "durationMs": 316,
           "exitCode": 0,
           "output": ""
         },
@@ -474,7 +1424,7 @@
           "label": "Missing user",
           "status": "passed",
           "weight": 1,
-          "durationMs": 269,
+          "durationMs": 363,
           "exitCode": 0,
           "output": ""
         },
@@ -483,11 +1433,134 @@
           "label": "Empty array",
           "status": "passed",
           "weight": 1,
-          "durationMs": 312,
+          "durationMs": 321,
           "exitCode": 0,
           "output": ""
         }
-      ]
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:explain-tenant-cache-collision:fixture-strong:1",
+      "taskId": "explain-tenant-cache-collision",
+      "taskTitle": "Explain a cross-tenant cache bug",
+      "category": "reasoning",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:42:11.549Z",
+      "completedAt": "2026-07-12T00:42:13.076Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.00119,
+        "durationMs": 1527,
+        "inputTokens": 510,
+        "outputTokens": 170,
+        "outputTokensPerSecond": 118.88111888111888,
+        "ttftMs": 750
+      },
+      "checks": [
+        {
+          "id": "root-cause",
+          "label": "Identifies tenant key collision",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 308,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "cross-file-evidence",
+          "label": "Cites both files and functions",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 325,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "robust-fix",
+          "label": "Proposes a composite key",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 337,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "regression-proof",
+          "label": "Specifies a cross-tenant test",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 320,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:isolate-request-id-state:fixture-strong:1",
+      "taskId": "isolate-request-id-state",
+      "taskTitle": "Refactor request ID state",
+      "category": "refactoring",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:41:56.369Z",
+      "completedAt": "2026-07-12T00:41:57.942Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.000692,
+        "durationMs": 1573,
+        "inputTokens": 360,
+        "outputTokens": 83,
+        "outputTokensPerSecond": 96.51162790697674,
+        "ttftMs": 650
+      },
+      "checks": [
+        {
+          "id": "sequence-behavior",
+          "label": "Preserves sequential behavior",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 341,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "instance-isolation",
+          "label": "Isolates generator instances",
+          "status": "passed",
+          "weight": 3,
+          "durationMs": 342,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "structural-state",
+          "label": "Removes module mutable state",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 328,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "output-contract",
+          "label": "Preserves prefix formatting",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 328,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:recover-port-utils:fixture-strong:1",
@@ -498,13 +1571,13 @@
       "provider": "fixture",
       "providerModel": "fixture-strong-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:42.940Z",
-      "completedAt": "2026-07-11T23:17:44.466Z",
+      "startedAt": "2026-07-12T00:42:19.517Z",
+      "completedAt": "2026-07-12T00:42:21.128Z",
       "status": "passed",
       "score": 1,
       "metrics": {
         "costUsd": 0.002184,
-        "durationMs": 1526,
+        "durationMs": 1611,
         "inputTokens": 1200,
         "outputTokens": 246,
         "outputTokensPerSecond": 90.77490774907749,
@@ -516,7 +1589,7 @@
           "label": "Parses valid ports",
           "status": "passed",
           "weight": 1,
-          "durationMs": 308,
+          "durationMs": 300,
           "exitCode": 0,
           "output": ""
         },
@@ -525,7 +1598,7 @@
           "label": "Rejects malformed ports",
           "status": "passed",
           "weight": 2,
-          "durationMs": 300,
+          "durationMs": 312,
           "exitCode": 0,
           "output": ""
         },
@@ -534,7 +1607,7 @@
           "label": "Formats valid ports",
           "status": "passed",
           "weight": 1,
-          "durationMs": 326,
+          "durationMs": 289,
           "exitCode": 0,
           "output": ""
         },
@@ -543,7 +1616,7 @@
           "label": "Rejects invalid formatting input",
           "status": "passed",
           "weight": 2,
-          "durationMs": 298,
+          "durationMs": 283,
           "exitCode": 0,
           "output": ""
         }
@@ -555,7 +1628,8 @@
         "notesTotal": 26,
         "recoveryMs": 1980,
         "rollbackDetected": false
-      }
+      },
+      "taskWeight": 1
     },
     {
       "attemptId": "demo:reject-false-find-premise:fixture-strong:1",
@@ -566,13 +1640,13 @@
       "provider": "fixture",
       "providerModel": "fixture-strong-v1",
       "repeat": 1,
-      "startedAt": "2026-07-11T23:17:39.996Z",
-      "completedAt": "2026-07-11T23:17:40.925Z",
+      "startedAt": "2026-07-12T00:42:16.069Z",
+      "completedAt": "2026-07-12T00:42:17.135Z",
       "status": "passed",
       "score": 1,
       "metrics": {
         "costUsd": 0.000352,
-        "durationMs": 929,
+        "durationMs": 1066,
         "inputTokens": 180,
         "outputTokens": 43,
         "outputTokensPerSecond": 74.13793103448276,
@@ -584,7 +1658,7 @@
           "label": "Rejects premise",
           "status": "passed",
           "weight": 2,
-          "durationMs": 260,
+          "durationMs": 323,
           "exitCode": 0,
           "output": ""
         },
@@ -593,7 +1667,7 @@
           "label": "Names undefined result",
           "status": "passed",
           "weight": 2,
-          "durationMs": 282,
+          "durationMs": 281,
           "exitCode": 0,
           "output": ""
         },
@@ -602,11 +1676,73 @@
           "label": "Gives actionable evidence",
           "status": "passed",
           "weight": 1,
-          "durationMs": 274,
+          "durationMs": 303,
           "exitCode": 0,
           "output": ""
         }
-      ]
+      ],
+      "taskWeight": 1
+    },
+    {
+      "attemptId": "demo:top-k-frequent:fixture-strong:1",
+      "taskId": "top-k-frequent",
+      "taskTitle": "Implement deterministic top-k frequency",
+      "category": "algorithms",
+      "modelId": "fixture-strong",
+      "provider": "fixture",
+      "providerModel": "fixture-strong-v1",
+      "repeat": 1,
+      "startedAt": "2026-07-12T00:41:47.142Z",
+      "completedAt": "2026-07-12T00:41:48.773Z",
+      "status": "passed",
+      "score": 1,
+      "metrics": {
+        "costUsd": 0.000978,
+        "durationMs": 1631,
+        "inputTokens": 430,
+        "outputTokens": 137,
+        "outputTokensPerSecond": 111.38211382113822,
+        "ttftMs": 690
+      },
+      "checks": [
+        {
+          "id": "frequency-ranking",
+          "label": "Ranks by frequency",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 426,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "deterministic-ties",
+          "label": "Resolves ties deterministically",
+          "status": "passed",
+          "weight": 2,
+          "durationMs": 304,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "edge-cases",
+          "label": "Handles k and empty inputs",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 344,
+          "exitCode": 0,
+          "output": ""
+        },
+        {
+          "id": "input-immutability",
+          "label": "Preserves the input array",
+          "status": "passed",
+          "weight": 1,
+          "durationMs": 338,
+          "exitCode": 0,
+          "output": ""
+        }
+      ],
+      "taskWeight": 1
     }
   ],
   "journalVerified": true,

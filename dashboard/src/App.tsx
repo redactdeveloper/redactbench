@@ -9,6 +9,7 @@ import {
   summarizeWeightedRepeats,
   weightedMean
 } from "../../src/statistics.js";
+import { VERSION } from "../../src/version.js";
 
 import { AttemptDetails, type DetailTab } from "./components/AttemptDetails.js";
 import { Icon } from "./components/Icon.js";
@@ -333,7 +334,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
 
         <footer className="status-bar" id="status">
           <div><span className={report.journalVerified ? "status-dot" : "status-dot status-dot--warning"}/>{report.journalVerified ? "Journal verified" : "Journal unverified"}<i>·</i>Docker isolated<i>·</i>Network disabled</div>
-          <div className="status-meta">RedactBench v0.1.0 <i>·</i> schema {report.schemaVersion}</div>
+          <div className="status-meta">RedactBench v{VERSION} <i>·</i> schema {report.schemaVersion}</div>
         </footer>
       </div>
       {showNewRun ? <NewRunDialog onClose={() => setShowNewRun(false)}/> : null}

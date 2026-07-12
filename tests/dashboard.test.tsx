@@ -19,12 +19,12 @@ describe("dashboard", () => {
     const user = userEvent.setup();
     render(<Dashboard initialReport={report} />);
 
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Run 2026-07-11 / demo");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Run 2026-07-12 / demo");
     expect(screen.getByLabelText("Overall score: 100.0%")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Fixture Fast" }));
 
-    expect(screen.getByLabelText("Overall score: 62.2%")).toBeTruthy();
+    expect(screen.getByLabelText("Overall score: 59.1%")).toBeTruthy();
     expect(screen.getByRole("heading", { name: /Fixture Fast — Attempt details/ })).toBeTruthy();
   });
 
