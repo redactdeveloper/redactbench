@@ -1,0 +1,29 @@
+schemaVersion: 1
+id: schedule-deficit-weighted-lanes
+title: Schedule weighted lanes with persistent deficit
+category: algorithms
+description: Replace global FIFO with deterministic deficit scheduling that preserves lane FIFO and accumulates credit for costly jobs.
+prompt: |
+  DeficitScheduler currently ignores lane quantum and drains one global FIFO. Implement persistent deficit scheduling over the constructor's lane order. Each lane has a positive integer quantum and a FIFO queue. On a lane visit, add its quantum once; serve its head while accumulated deficit covers cost, retaining unused deficit between visits. If the head does not fit, advance to the next lane so large jobs eventually accumulate enough credit. enqueue(laneId, job) accepts a unique non-empty job ID and positive safe-integer cost. next() returns { laneId, job } or null. Preserve lane order, validate all public inputs, and do not mutate lane or job objects.
+tags: [gold, javascript, scheduling, fairness]
+checks:
+  - id: weighted-service
+    label: Gives higher-quantum lanes proportionally longer service
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, weighted]
+    weight: 3
+  - id: deficit-accumulation
+    label: Accumulates credit until a costly head job fits
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, accumulation]
+    weight: 3
+  - id: fifo-and-dynamic
+    label: Preserves lane FIFO as jobs arrive dynamically
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, fifo-dynamic]
+    weight: 2
+  - id: scheduler-contract
+    label: Validates lanes and jobs without mutating input
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, contract]
+    weight: 2

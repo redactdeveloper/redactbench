@@ -15,3 +15,5 @@ tasks:
     weight: 1
   - manifest: algorithms-event-time-buffer/task.yaml
     weight: 1
+  - manifest: algorithms-deficit-scheduler/task.yaml
+    weight: 1
