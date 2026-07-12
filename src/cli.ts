@@ -8,6 +8,7 @@ import { parseArgs } from "node:util";
 import { reportCommand } from "./commands/report.js";
 import { runCommand } from "./commands/run.js";
 import {
+  formatRunProgress,
   formatStartResult,
   startCommand,
   type StartCommandOptions,
@@ -230,11 +231,19 @@ async function handleStart(
   }
   const runId = values["run-id"] ?? defaultRunId(dependencies.now());
   validateRunId(runId);
+  const dryRun = values["dry-run"] ?? false;
   const options: StartCommandOptions = {
     concurrency: integerOption(values.concurrency, 1, "concurrency", 1, 8),
-    dryRun: values["dry-run"] ?? false,
+    dryRun,
     env: dependencies.env,
     fieldFile: values.field ?? "benchmarks/target-field.yaml",
+    ...(dryRun
+      ? {}
+      : {
+          onProgress: (event) => {
+            dependencies.stdout.write(formatRunProgress(event));
+          }
+        }),
     outDirectory: values.out ?? "runs",
     repeatCount: integerOption(values.repeat, 1, "repeat", 1, 100),
     runId,

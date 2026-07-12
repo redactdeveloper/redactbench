@@ -5,7 +5,12 @@ import { pathToFileURL } from "node:url";
 
 import { describe, expect, it, vi } from "vitest";
 
+import reportData from "../dashboard/public/report.json";
 import { isMainModule, main } from "../src/cli.js";
+import type { StartCommandOptions } from "../src/commands/start.js";
+import { ReportSchema } from "../src/contracts.js";
+
+const report = ReportSchema.parse(reportData);
 
 function outputBuffer() {
   let value = "";
@@ -129,6 +134,72 @@ describe("CLI", () => {
       suiteFile: "benchmarks/demo/suite.yaml"
     }));
     expect(stdout.value()).toContain("No model or API requests were sent");
+    expect(start.mock.calls[0]?.[0].onProgress).toBeUndefined();
+  });
+
+  it("streams sanitized progress for a real start invocation", async () => {
+    const stdout = outputBuffer();
+    const start = vi.fn(async (options: StartCommandOptions) => {
+      await options.onProgress?.({
+        completedAttempts: 0,
+        remainingAttempts: 88,
+        resumed: false,
+        runId: options.runId,
+        totalAttempts: 88,
+        type: "run.ready"
+      });
+      await options.onProgress?.({
+        attemptId: `${options.runId}:task:model:1`,
+        completedAttempts: 1,
+        modelId: "model",
+        modelLabel: "Model\u001B]8;;https://unsafe.test\u0007",
+        score: 1,
+        status: "passed",
+        taskId: "task",
+        taskTitle: "Task\nTitle",
+        totalAttempts: 88,
+        type: "attempt.completed"
+      });
+      await options.onProgress?.({
+        completedAttempts: 88,
+        runId: options.runId,
+        totalAttempts: 88,
+        type: "run.completed"
+      });
+      return {
+        dryRun: false as const,
+        plan: {
+          attemptCount: 88,
+          concurrency: 1,
+          entrantCount: 11,
+          entrants: [],
+          repeatCount: 1,
+          runId: options.runId,
+          seed: 20_260_712,
+          suiteTitle: "Demo",
+          taskCount: 8
+        },
+        report,
+        reportFile: "/tmp/report/index.html",
+        runDirectory: "/tmp/run"
+      };
+    });
+
+    expect(await main(["start", "--run-id", "target-run"], {
+      start,
+      stdout: stdout.stream
+    })).toBe(0);
+
+    expect(stdout.value()).toContain(
+      "Starting target-run: 0/88 completed · 88 remaining\n"
+    );
+    expect(stdout.value()).toContain(
+      "[1/88] PASSED 100.0% · Model · Task Title\n"
+    );
+    expect(stdout.value()).toContain(
+      "Finished target-run: 88/88 attempts recorded\n"
+    );
+    expect(stdout.value()).not.toContain("unsafe.test");
   });
 
   it("validates suite, task and model files without running Docker", async () => {

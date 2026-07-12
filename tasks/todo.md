@@ -509,11 +509,11 @@
 
 **Критерии приёмки:**
 
-- [ ] Run engine сообщает `ready`, каждую записанную попытку и `completed` с точным `completed/total`.
-- [ ] Resume начинает счётчик с уже записанных attempts и не выдаёт их за новые.
-- [ ] CLI progress не содержит prompt/response/error payload или credential values; `--dry-run` не создаёт progress events.
+- [x] Run engine сообщает `ready`, каждую записанную попытку и `completed` с точным `completed/total`.
+- [x] Resume начинает счётчик с уже записанных attempts и не выдаёт их за новые.
+- [x] CLI progress не содержит prompt/response/error payload или credential values; `--dry-run` не создаёт progress events.
 
-**Проверка:** RED/GREEN run-resume contract + CLI formatting/orchestration tests + fixture run manual output.
+**Проверка:** RED/GREEN run-resume contract; durable journal assertion; CLI formatting/orchestration tests с OSC/control/bidi injection fixtures; полный gate — 128 tests, typecheck, lint, build, audit 0 vulnerabilities и Playwright 4/4.
 
 **Зависимости:** задачи 29 и journal resume.
 

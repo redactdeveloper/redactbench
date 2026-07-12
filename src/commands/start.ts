@@ -21,7 +21,7 @@ import {
   ensureHarnessNetworks,
   type HarnessNetworkReadiness
 } from "../harness/networks.js";
-import { runBenchmark } from "../run.js";
+import { runBenchmark, type RunProgressEvent } from "../run.js";
 import { reportCommand } from "./report.js";
 import { preflightDocker } from "./run.js";
 
@@ -31,6 +31,7 @@ export interface StartCommandOptions {
   env: Readonly<Record<string, string | undefined>>;
   fieldFile: string;
   outDirectory: string;
+  onProgress?: (event: RunProgressEvent) => Promise<void> | void;
   repeatCount: number;
   runId: string;
   runtimesFile: string;
@@ -103,10 +104,101 @@ function money(value: number | null): string {
   return value === null ? "—" : `$${value.toFixed(value < 0.01 ? 4 : 2)}`;
 }
 
+// Labels and output paths can originate in benchmark config/report data.
+// Strip terminal control protocols and invisible direction overrides before stdout.
+function terminalText(value: string): string {
+  let output = "";
+  let index = 0;
+  while (index < value.length) {
+    const code = value.charCodeAt(index);
+    if (code === 0x1b) {
+      const kind = value.charCodeAt(index + 1);
+      if (kind === 0x5d) {
+        index += 2;
+        while (index < value.length) {
+          if (value.charCodeAt(index) === 0x07) {
+            index += 1;
+            break;
+          }
+          if (
+            value.charCodeAt(index) === 0x1b &&
+            value.charCodeAt(index + 1) === 0x5c
+          ) {
+            index += 2;
+            break;
+          }
+          index += 1;
+        }
+      } else if (kind === 0x5b) {
+        index += 2;
+        while (index < value.length) {
+          const sequenceCode = value.charCodeAt(index);
+          index += 1;
+          if (sequenceCode >= 0x40 && sequenceCode <= 0x7e) break;
+        }
+      } else {
+        index += 1;
+        while (
+          index < value.length &&
+          value.charCodeAt(index) >= 0x20 &&
+          value.charCodeAt(index) <= 0x2f
+        ) {
+          index += 1;
+        }
+        if (index < value.length) index += 1;
+      }
+      continue;
+    }
+
+    const point = value.codePointAt(index) ?? 0;
+    const width = point > 0xffff ? 2 : 1;
+    if (
+      code <= 0x1f ||
+      (code >= 0x7f && code <= 0x9f)
+    ) {
+      output += " ";
+    } else if (
+      !(
+        point === 0x061c ||
+        (point >= 0x200b && point <= 0x200f) ||
+        (point >= 0x202a && point <= 0x202e) ||
+        (point >= 0x2060 && point <= 0x2069) ||
+        point === 0xfeff
+      )
+    ) {
+      output += String.fromCodePoint(point);
+    }
+    index += width;
+  }
+  return output.replace(/\s+/gu, " ").trim();
+}
+
+export function formatRunProgress(event: RunProgressEvent): string {
+  switch (event.type) {
+    case "run.ready":
+      return [
+        event.resumed ? "Resuming" : "Starting",
+        ` ${terminalText(event.runId)}: ${event.completedAttempts}/${event.totalAttempts} completed`,
+        ` · ${event.remainingAttempts} remaining\n`
+      ].join("");
+    case "attempt.completed": {
+      const score = Math.max(0, Math.min(1, event.score));
+      return [
+        `[${event.completedAttempts}/${event.totalAttempts}]`,
+        ` ${event.status.toUpperCase()} ${(score * 100).toFixed(1)}%`,
+        ` · ${terminalText(event.modelLabel)}`,
+        ` · ${terminalText(event.taskTitle)}\n`
+      ].join("");
+    }
+    case "run.completed":
+      return `Finished ${terminalText(event.runId)}: ${event.completedAttempts}/${event.totalAttempts} attempts recorded\n`;
+  }
+}
+
 function table(report: Report): string {
   const rows = report.leaderboard.map((entry, index) => [
     String(index + 1),
-    entry.label,
+    terminalText(entry.label),
     `${(entry.score * 100).toFixed(1)}%`,
     metric(entry.metrics.avgTtftMs === null ? null : entry.metrics.avgTtftMs / 1_000, "s"),
     metric(entry.metrics.outputTokensPerSecond),
@@ -151,7 +243,7 @@ export function formatStartResult(result: StartCommandResult): string {
       ...(missingNetworks.length > 0
         ? [`  Will create: ${missingNetworks.join(", ")}`]
         : []),
-      `Run ID: ${result.plan.runId}`,
+      `Run ID: ${terminalText(result.plan.runId)}`,
       "No model or API requests were sent."
     ].join("\n") + "\n";
   }
@@ -160,9 +252,9 @@ export function formatStartResult(result: StartCommandResult): string {
     "",
     table(result.report),
     "",
-    `Run ID: ${result.plan.runId}`,
-    `Static report: ${result.reportFile}`,
-    `Run directory: ${result.runDirectory}`
+    `Run ID: ${terminalText(result.plan.runId)}`,
+    `Static report: ${terminalText(result.reportFile)}`,
+    `Run directory: ${terminalText(result.runDirectory)}`
   ].join("\n") + "\n";
 }
 
@@ -271,6 +363,7 @@ export async function startCommand(
       journalFile,
       modelConfigDirectory: dirname(resolve(options.runtimesFile)),
       models,
+      ...(options.onProgress ? { onProgress: options.onProgress } : {}),
       repeatCount: options.repeatCount,
       runId: options.runId,
       seed: options.seed,

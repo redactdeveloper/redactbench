@@ -59,7 +59,7 @@ chmod 600 ~/.config/redactbench/secrets/*
 redactbench start
 ```
 
-По умолчанию это `11 × 8 × repeat 1 = 88` attempts с concurrency `1` и seed `20260712`. Отсутствующие images и provider bridge networks создаются автоматически. По завершении команда печатает leaderboard, run ID и путь к `runs/<run-id>/report/index.html`. Для надёжного resume используйте один и тот же ID:
+По умолчанию это `11 × 8 × repeat 1 = 88` attempts с concurrency `1` и seed `20260712`. Отсутствующие images и provider bridge networks создаются автоматически. Команда сначала печатает `completed/total`, затем одну sanitized progress-строку после каждой durable записи attempt в journal. Resume сразу показывает уже завершённое число и не выдаёт старые attempts за новые. По завершении печатаются leaderboard, run ID и путь к `runs/<run-id>/report/index.html`. Для надёжного resume используйте один и тот же ID:
 
 ```bash
 redactbench start --run-id target-2026-07-13

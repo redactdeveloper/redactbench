@@ -2,6 +2,12 @@
 
 Все заметные изменения RedactBench документируются в этом файле. Формат следует Keep a Changelog, версии — Semantic Versioning.
 
+## [Unreleased]
+
+### Added
+
+- Durable progress для долгих benchmark runs: точный initial/resume count, sanitized status после каждой journaled попытки и явное завершение очереди.
+
 ## [0.3.0] - 2026-07-12
 
 ### Added

@@ -404,10 +404,10 @@ typed field roster
 
 ## Definition of Done поверхности
 
-- [ ] Manifest содержит ровно 11 согласованных entrants и не содержит secrets.
-- [ ] UI показывает roster/readiness без score до запуска.
-- [ ] Любая executable binding имеет `execution: docker`; host fallback отсутствует.
-- [ ] Hidden evaluator недоступен harness container.
-- [ ] Contract/component/security tests, typecheck, lint, build и browser smoke чистые.
-- [ ] `redactbench start --dry-run` доказывает готовность orchestration без model/API calls.
-- [ ] Долгий `redactbench start` показывает durable progress и корректный resume count.
+- [x] Manifest содержит ровно 11 согласованных entrants и не содержит secrets.
+- [x] UI показывает roster/readiness без score до запуска.
+- [x] Любая executable binding имеет `execution: docker`; host fallback отсутствует.
+- [x] Hidden evaluator недоступен harness container.
+- [x] Contract/component/security tests, typecheck, lint, build и browser smoke чистые.
+- [x] `redactbench start --dry-run` доказывает готовность orchestration без model/API calls.
+- [x] Долгий `redactbench start` показывает durable progress и корректный resume count.
