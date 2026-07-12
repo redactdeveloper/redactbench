@@ -190,6 +190,7 @@ describe("evaluateChecks", () => {
       errorCode: "SANDBOX_ERROR",
       status: "error"
     });
+    expect(cleanupFailure.imageIds).toEqual(["sha256:image"]);
     await Promise.all([rm(root, { force: true, recursive: true }), context.cleanup()]);
   });
 });

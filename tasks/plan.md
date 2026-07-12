@@ -289,9 +289,16 @@ weighted report attempts ─→ repeat statistics ─→ dashboard reliability U
 
 ## Definition of Done v0.2
 
-- Check order не влияет на workspace state и score.
-- JSON report достаточно для точного повторения weighted filtering и интерпретации run conditions.
-- CI появляется только при двух или более полных repeats.
-- Demo содержит все 8 categories и различает strong/partial/weak fixtures.
-- Документация не выдаёт smoke coverage или t interval за более сильное доказательство.
-- Все проверки чистые, worktree содержит только атомарные commits.
+- [x] Check order не влияет на workspace state и score.
+- [x] JSON report достаточно для точного повторения weighted filtering и интерпретации run conditions.
+- [x] CI появляется только при двух или более полных repeats.
+- [x] Demo содержит все 8 categories и различает strong/partial/weak fixtures.
+- [x] Документация не выдаёт smoke coverage или t interval за более сильное доказательство.
+- [ ] Все проверки чистые, worktree содержит только атомарные commits.
+
+## Фактический результат v0.2
+
+- Package `0.2.0`, schema `1`, demo scorer `1.1.0`.
+- Fresh run: 24 attempts, 96 independent Docker checks, 8 categories, journal verified, 0 attempt errors.
+- Fixture scores: Strong 100.0%, Fast 59.1%, Cautious 32.4%.
+- При стандартном repeat=1 report хранит `sampleCount: 1` и `confidence95: null`; это ожидаемое честное состояние, а не отсутствие данных из-за ошибки.

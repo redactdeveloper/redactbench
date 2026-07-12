@@ -56,6 +56,9 @@ describe("dashboard", () => {
     pushback.category = "debugging";
     pushback.score = 0;
     pushback.taskWeight = 3;
+    delete weighted.leaderboard.find(
+      (model) => model.modelId === "fixture-fast"
+    )!.categoryStatistics.debugging;
 
     render(<Dashboard initialReport={weighted} />);
     await user.click(screen.getByRole("button", { name: "Fixture Fast" }));

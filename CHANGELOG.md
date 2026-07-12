@@ -2,6 +2,22 @@
 
 Все заметные изменения RedactBench документируются в этом файле. Формат следует Keep a Changelog, версии — Semantic Versioning.
 
+## [0.2.0] - 2026-07-12
+
+### Added
+
+- Repeat-level sample SD, standard error и descriptive 95% Student-t interval по полным weighted suite repeats.
+- Явные `taskWeight`, `repeatCount`, `concurrency` и `seed` в report/dashboard.
+- Algorithms, Refactoring, Security, UI и Reasoning smoke-задачи; demo теперь покрывает все восемь категорий (24 attempts / 96 checks).
+- Reliability UI с `n`, CI и честным состоянием без interval при одном repeat.
+
+### Changed
+
+- Каждый hidden check запускается на отдельной копии одного post-response workspace, исключая влияние порядка и side effects.
+- Dashboard-filtered score использует suite task weights вместо простого среднего.
+- Demo scorer поднят до `1.1.0`; эталонные Strong/Fast/Cautious fixtures получают 100.0% / 59.1% / 32.4%.
+- Package version поднята до `0.2.0`, а leaderboard показывает все восемь category columns.
+
 ## [0.1.0] - 2026-07-12
 
 ### Added

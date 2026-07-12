@@ -92,7 +92,10 @@ export async function evaluateChecks(
       try {
         await isolatedWorkspace.cleanup();
       } catch (error) {
-        execution = failedExecution(error);
+        execution = {
+          ...failedExecution(error),
+          imageId: execution.imageId
+        };
       }
     }
     if (execution.imageId) {

@@ -37,6 +37,15 @@ describe("scoreStatistics", () => {
       standardError: null
     });
   });
+
+  it("returns a zero-width interval when repeated scores do not vary", () => {
+    expect(scoreStatistics([0.7, 0.7, 0.7])).toEqual({
+      confidence95: { lower: 0.7, upper: 0.7 },
+      sampleCount: 3,
+      standardDeviation: 0,
+      standardError: 0
+    });
+  });
 });
 
 describe("summarizeWeightedRepeats", () => {

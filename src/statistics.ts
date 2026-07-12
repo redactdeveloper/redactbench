@@ -95,10 +95,14 @@ export function scoreStatistics(values: readonly number[]): ScoreStatistics {
     };
   }
 
-  const mean = values.reduce((sum, value) => sum + value, 0) / sampleCount;
-  const variance =
-    values.reduce((sum, value) => sum + (value - mean) ** 2, 0) /
-    (sampleCount - 1);
+  const identical = values.every((value) => value === values[0]);
+  const mean = identical
+    ? values[0]!
+    : values.reduce((sum, value) => sum + value, 0) / sampleCount;
+  const variance = identical
+    ? 0
+    : values.reduce((sum, value) => sum + (value - mean) ** 2, 0) /
+      (sampleCount - 1);
   const standardDeviation = Math.sqrt(variance);
   const standardError = standardDeviation / Math.sqrt(sampleCount);
   // NIST mean confidence interval: mean ± t(1-alpha/2, n-1) × s/√n.

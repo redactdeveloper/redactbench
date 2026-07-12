@@ -336,14 +336,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Второй check не видит файлы/правки, созданные первым.
-- [ ] Исходный evaluated workspace остаётся неизменным.
-- [ ] Clone/setup/cleanup errors безопасно отражаются в check result.
+- [x] Второй check не видит файлы/правки, созданные первым.
+- [x] Исходный evaluated workspace остаётся неизменным.
+- [x] Clone/setup/cleanup errors безопасно отражаются в check result.
 
 **Проверка:**
 
-- [ ] Targeted evaluator regression проходит.
-- [ ] Docker integration и полный test suite проходят.
+- [x] `tests/evaluator.test.ts` — 4 passed, включая mutation/setup/cleanup regressions.
+- [x] Docker/attempt/context-recovery integration — 4 passed после изменения.
 
 **Зависимости:** Задача 6.
 
@@ -357,14 +357,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Filtered и aggregate scores совпадают при unequal task weights.
-- [ ] Statistics используют только полные repeats и возвращают `null` CI при `n < 2`.
-- [ ] CI ограничен `[0,1]`, а zero variance даёт zero-width interval.
+- [x] Filtered и aggregate scores совпадают при unequal task weights.
+- [x] Statistics используют только полные repeats и возвращают `null` CI при `n < 2`.
+- [x] CI ограничен `[0,1]`, а zero variance даёт zero-width interval.
 
 **Проверка:**
 
-- [ ] RED/GREEN unit tests для statistics и aggregate.
-- [ ] Report schema round-trip проходит.
+- [x] RED/GREEN: `statistics/aggregate/contracts` — 21 passed.
+- [x] Старый report получает безопасные defaults; новый schema отклоняет противоречивую uncertainty metadata.
 
 **Зависимости:** Задача 8.
 
@@ -378,14 +378,14 @@
 
 **Критерии приёмки:**
 
-- [ ] Leaderboard/summary используют authoritative task weights.
-- [ ] `repeat=1` показывает рекомендацию, а не `±0`.
-- [ ] Responsive table и page не получают horizontal overflow.
+- [x] Leaderboard/summary используют authoritative task weights.
+- [x] `repeat=1` показывает рекомендацию, а не `±0`.
+- [x] Responsive table и page не получают horizontal overflow.
 
 **Проверка:**
 
-- [ ] Dashboard component tests.
-- [ ] Три Playwright viewport smoke tests.
+- [x] Dashboard component tests — 8 passed, включая unequal-weight 25% regression.
+- [x] Playwright 1536×1024, 1440×900 и 390×844 — 3 passed без console/network errors.
 
 **Зависимости:** Задача 16.
 
@@ -397,46 +397,46 @@
 
 **Критерии приёмки:** edge cases, deterministic ties и input immutability оцениваются независимыми checks; три fixture tiers различаются.
 
-**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+**Проверка:** [x] targeted fixture run: Strong/Fast/Cautious = 100% / 66.7% / 33.3%.
 
 ## Задача 19: Добавить Refactoring smoke task
 
 **Критерии приёмки:** behavior сохранён, shared mutable state удалён структурно, три fixture tiers различаются.
 
-**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+**Проверка:** [x] targeted fixture run: Strong/Fast/Cautious = 100% / 37.5% / 25%.
 
 ## Задача 20: Добавить Security smoke task
 
 **Критерии приёмки:** valid path работает, traversal/absolute/NUL блокируются, три fixture tiers различаются.
 
-**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+**Проверка:** [x] targeted fixture run: Strong/Fast/Cautious = 100% / 62.5% / 50%; symlink escape отличает полный fix.
 
 ## Задача 21: Добавить UI smoke task
 
 **Критерии приёмки:** semantic controls, state change и keyboard-safe behavior проверяются детерминированно, три fixture tiers различаются.
 
-**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+**Проверка:** [x] targeted fixture run: Strong/Fast/Cautious = 100% / 62.5% / 37.5%.
 
 ## Задача 22: Добавить Reasoning smoke task
 
 **Критерии приёмки:** cross-file cause, exact evidence и actionable fix оцениваются без LLM judge, три fixture tiers различаются.
 
-**Проверка:** targeted fixture run проходит ожидаемую score ordering.
+**Проверка:** [x] targeted fixture run: Strong/Fast/Cautious = 100% / 57.1% / 0%.
 
 ## Задача 23: Переверсионировать scorer и провести final audit
 
 **Критерии приёмки:**
 
-- [ ] Package `0.2.0`, demo scorer `1.1.0`, docs/changelog актуальны.
-- [ ] Fresh demo: 8 categories × 3 models = 24 attempts, journal verified.
+- [x] Package `0.2.0`, demo scorer `1.1.0`, docs/changelog актуальны.
+- [x] Fresh demo: 8 categories × 3 models = 24 attempts / 96 checks, journal verified, 0 attempt errors.
 - [ ] Clean install/tests/lint/typecheck/build/audit/browser smoke чистые.
 - [ ] Final review не содержит unresolved critical/high findings.
 
 ## Definition of Done v0.2
 
-- [ ] Hidden checks независимы по filesystem state.
-- [ ] Weighted filtering совпадает с scorer.
-- [ ] Repeat uncertainty видна и корректно отсутствует при одном sample.
-- [ ] Demo покрывает все 8 categories.
-- [ ] Ограничения статистики и smoke coverage документированы.
+- [x] Hidden checks независимы по filesystem state.
+- [x] Weighted filtering совпадает с scorer.
+- [x] Repeat uncertainty видна и корректно отсутствует при одном sample.
+- [x] Demo покрывает все 8 categories.
+- [x] Ограничения статистики и smoke coverage документированы.
 - [ ] Worktree чист, изменения сохранены атомарными commits.

@@ -169,12 +169,38 @@ describe("aggregateJournal", () => {
     const report = aggregateJournal(entries, "2026-07-12T00:00:09.000Z");
     const model = report.leaderboard[0]!;
 
-    expect(model.score).toBeCloseTo(7 / 13, 12);
+    expect(model.score).toBeCloseTo(0.5, 12);
     expect(model.scoreStatistics.sampleCount).toBe(3);
     expect(model.scoreStatistics.standardDeviation).toBeCloseTo(0.1, 12);
     expect(model.scoreStatistics.confidence95?.lower).toBeCloseTo(0.251567, 5);
     expect(model.scoreStatistics.confidence95?.upper).toBeCloseTo(0.748433, 5);
     expect(model.categoryStatistics.debugging?.sampleCount).toBe(4);
     expect(model.categoryStatistics.security?.sampleCount).toBe(3);
+  });
+
+  it("rejects attempt weights that disagree with the run definition", () => {
+    const started: JournalPayload = {
+      type: "run.started",
+      configHash: "e".repeat(64),
+      run: {
+        id: "run-invalid-weight",
+        title: "Invalid weight",
+        suiteId: "demo",
+        scorerVersion: "1.1.0",
+        startedAt: "2026-07-12T00:00:00.000Z",
+        repeatCount: 1,
+        models: [
+          { id: "known", label: "Known", model: "fixture-v1", provider: "fixture" }
+        ],
+        tasks: [{ category: "debugging", id: "debug", title: "debug", weight: 1 }]
+      }
+    };
+    const mismatched = attempt("known-debug", "known", "debug", 1, 0);
+    if (mismatched.type !== "attempt.completed") throw new Error("invalid fixture");
+    mismatched.taskWeight = 3;
+
+    expect(() => aggregateJournal([entry(1, started), entry(2, mismatched)])).toThrow(
+      /task weight/i
+    );
   });
 });

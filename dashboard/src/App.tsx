@@ -49,28 +49,42 @@ function totalKnownCost(attempts: Report["attempts"]): number | null {
   return attempts.reduce((sum, attempt) => sum + (attempt.metrics.costUsd ?? 0), 0);
 }
 
-function weightedAttemptScore(attempts: Report["attempts"]): number | null {
-  return weightedMean(
-    attempts.map((attempt) => ({
-      score: attempt.score,
-      weight: attempt.taskWeight
-    }))
-  );
-}
-
-function filteredStatistics(
+function filteredScoreSummary(
   attempts: Report["attempts"],
   expectedTaskIds: readonly string[]
-): ReportScoreStatistics {
-  return summarizeWeightedRepeats(
-    attempts.map((attempt) => ({
-      repeat: attempt.repeat,
-      score: attempt.score,
-      taskId: attempt.taskId,
-      weight: attempt.taskWeight
-    })),
+): { score: number | null; statistics: ReportScoreStatistics } {
+  const observations = attempts.map((attempt) => ({
+    repeat: attempt.repeat,
+    score: attempt.score,
+    taskId: attempt.taskId,
+    weight: attempt.taskWeight
+  }));
+  const repeatSummary = summarizeWeightedRepeats(
+    observations,
     expectedTaskIds
-  ).statistics;
+  );
+  return {
+    score:
+      repeatSummary.mean ??
+      weightedMean(
+        observations.map((observation) => ({
+          score: observation.score,
+          weight: observation.weight
+        }))
+      ),
+    statistics: repeatSummary.statistics
+  };
+}
+
+function categoryScoreSummary(
+  model: Report["leaderboard"][number],
+  category: BenchmarkCategory
+): { score: number | null; statistics: ReportScoreStatistics } | null {
+  const score = model.categories[category];
+  const statistics = model.categoryStatistics[category];
+  return score === undefined || statistics === undefined
+    ? null
+    : { score, statistics };
 }
 
 function runLabel(report: Report): string {
@@ -194,14 +208,22 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
     const isFiltered = category !== "all" || taskId !== "all";
     const nextRows = report.leaderboard.map((model) => {
       const attempts = filteredAttempts.filter((attempt) => attempt.modelId === model.modelId);
-      const statistics = isFiltered
-        ? category !== "all" && taskId === "all" && model.categoryStatistics[category]
-          ? model.categoryStatistics[category]
-          : filteredStatistics(attempts, expectedFilteredTaskIds)
-        : model.scoreStatistics;
+      let score: number | null = model.score;
+      let statistics = model.scoreStatistics;
+      if (isFiltered) {
+        const categorySummary =
+          category !== "all" && taskId === "all"
+            ? categoryScoreSummary(model, category)
+            : null;
+        const summary =
+          categorySummary ??
+          filteredScoreSummary(attempts, expectedFilteredTaskIds);
+        score = summary.score;
+        statistics = summary.statistics;
+      }
       return {
         model,
-        score: isFiltered ? weightedAttemptScore(attempts) : model.score,
+        score,
         statistics,
         ttft: isFiltered ? average(attempts.map((attempt) => attempt.metrics.ttftMs)) : model.metrics.avgTtftMs,
         speed: isFiltered ? average(attempts.map((attempt) => attempt.metrics.outputTokensPerSecond)) : model.metrics.outputTokensPerSecond,

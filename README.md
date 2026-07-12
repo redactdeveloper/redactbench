@@ -11,12 +11,13 @@ RedactBench — локальный воспроизводимый полигон
 - восемь категорий: `algorithms`, `debugging`, `refactoring`, `security`, `ui`, `reasoning`, `hallucination`, `context-recovery`;
 - прямые streaming adapters для OpenAI Responses, Anthropic Messages и Gemini GenerateContent;
 - детерминированный fixture-provider для бесплатных end-to-end прогонов;
-- weighted hidden checks в Docker без сети, capabilities и записи в evaluator;
+- weighted hidden checks в Docker без сети/capabilities; каждый check получает собственную копию итогового workspace;
 - строгий patch/text protocol, временный workspace и защита от path/symlink escape;
 - hash-chained JSONL journal, resume и восстановление между фазами Context Recovery;
 - TTFT, output tokens/s, стоимость и cost per correct при наличии usage/pricing;
-- React-dashboard с фильтрами, сортировкой, деталями checks, импортом и экспортом отчёта;
-- demo-suite: Debugging, Hallucination/Pushback и Context Recovery.
+- repeat-level SD/SE/95% Student-t interval по полным повторам и явные `repeat/concurrency/seed`;
+- React-dashboard с weighted-фильтрами, reliability, деталями checks, импортом и экспортом отчёта;
+- deterministic smoke-suite по всем восьми категориям.
 
 ## Быстрый запуск
 
@@ -29,15 +30,17 @@ npm run bench:report
 npm run redactbench -- serve --report reports/demo --port 4173
 ```
 
-Откройте `http://127.0.0.1:4173`. Demo делает 9 attempts и 33 проверки без API-ключей и обращений к модельным провайдерам. Повторный `npm run bench:demo` возобновляет run `demo` и не повторяет уже завершённые attempts.
+Откройте `http://127.0.0.1:4173`. Demo делает 24 attempts и 96 проверок без API-ключей и обращений к модельным провайдерам. Повторный `npm run bench:demo` возобновляет run `demo` и не повторяет уже завершённые attempts.
 
 Фактический эталонный demo-run:
 
 | Fixture model | Score |
 |---|---:|
 | Fixture Strong | 100.0% |
-| Fixture Fast | 62.2% |
-| Fixture Cautious | 37.8% |
+| Fixture Fast | 59.1% |
+| Fixture Cautious | 32.4% |
+
+Это regression fixtures самого harness, а не оценка реальных моделей. При стандартном `--repeat 1` dashboard показывает `n=1` без выдуманного доверительного интервала; для оценки вариативности используйте как минимум `--repeat 3`.
 
 ## Запуск реальных моделей
 
@@ -122,9 +125,9 @@ direct streaming provider request
         ↓
 strict text answer или validated unified diff
         ↓
-fresh temporary workspace
+fresh temporary post-response workspace
         ↓
-Docker hidden checks → weighted score
+fresh clone per hidden check → Docker → weighted score
         ↓
 fsync hash-chained journal → report/dashboard
 ```
@@ -138,13 +141,15 @@ fsync hash-chained journal → report/dashboard
 - [Threat model и hardening](docs/security.md)
 - [ADR-001: direct providers, deterministic checks, journal](docs/decisions/001-direct-providers-and-journal.md)
 - [ADR-002: Context Recovery v1](docs/decisions/002-context-recovery-v1.md)
+- [ADR-003: независимые checks и repeat uncertainty](docs/decisions/003-check-isolation-and-repeat-uncertainty.md)
 - [Визуальная спецификация](design/DESIGN.md)
 
-## Честные ограничения v0.1
+## Честные ограничения v0.2
 
 - Обычный coding-attempt — один запрос с полным patch, а не интерактивный tool loop `inspect → edit → run → observe`.
 - Context Recovery — два stateless patch-запроса. Вторая фаза получает post-phase-1 snapshot, Git summary и заметки, но не conversation history.
-- Demo покрывает три категории; остальные поддержаны контрактом и task-owned checks, но готовых production suites для них пока нет.
+- Demo содержит по одной deterministic smoke-задаче на каждую из восьми категорий. Это проверка ширины harness, а не репрезентативный production corpus.
+- 95% interval описывает разброс полных repeat-level suite scores. Он отсутствует при `n < 2`, не является тестом статистической значимости и не компенсирует drift provider, сети или hardware.
 - Стоимость корректна только при наличии provider usage и вручную зафиксированного pricing.
 - Journal сохраняет config/prompt/response hashes и Docker image IDs, но ещё не фиксирует полный hardware fingerprint.
 - Docker boundary рассчитана на локальный benchmark, а не на hostile multi-tenant execution service.

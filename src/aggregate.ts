@@ -36,8 +36,56 @@ export function aggregateJournal(
     string,
     Extract<JournalEntry["payload"], { type: "attempt.completed" }>
   >();
+  const taskDefinitions = new Map(
+    started.run.tasks.map((task) => [task.id, task] as const)
+  );
+  const modelDefinitions = new Map(
+    started.run.models.map((model) => [model.id, model] as const)
+  );
   for (const entry of entries) {
     if (entry.payload.type === "attempt.completed") {
+      const event = entry.payload;
+      const task = taskDefinitions.get(event.report.taskId);
+      const model = modelDefinitions.get(event.report.modelId);
+      if (!task) {
+        throw new RedactBenchError(
+          "JOURNAL_INVALID",
+          `attempt references unknown task: ${event.report.taskId}`
+        );
+      }
+      if (!model) {
+        throw new RedactBenchError(
+          "JOURNAL_INVALID",
+          `attempt references unknown model: ${event.report.modelId}`
+        );
+      }
+      if (event.taskWeight !== task.weight) {
+        throw new RedactBenchError(
+          "JOURNAL_INVALID",
+          `attempt task weight does not match run definition: ${event.report.taskId}`
+        );
+      }
+      if (event.report.category !== task.category) {
+        throw new RedactBenchError(
+          "JOURNAL_INVALID",
+          `attempt category does not match run definition: ${event.report.taskId}`
+        );
+      }
+      if (
+        event.report.provider !== model.provider ||
+        event.report.providerModel !== model.model
+      ) {
+        throw new RedactBenchError(
+          "JOURNAL_INVALID",
+          `attempt provider does not match run definition: ${event.report.modelId}`
+        );
+      }
+      if (event.report.repeat > started.run.repeatCount) {
+        throw new RedactBenchError(
+          "JOURNAL_INVALID",
+          `attempt repeat exceeds run definition: ${event.report.attemptId}`
+        );
+      }
       attemptEvents.set(entry.payload.report.attemptId, entry.payload);
     }
   }
@@ -90,10 +138,11 @@ export function aggregateJournal(
       taskId: event.report.taskId,
       weight: event.taskWeight
     }));
-    const scoreStatistics = summarizeWeightedRepeats(
+    const scoreSummary = summarizeWeightedRepeats(
       observations,
       started.run.tasks.map((task) => task.id)
-    ).statistics;
+    );
+    const scoreStatistics = scoreSummary.statistics;
     const categoryStatistics: Partial<
       Record<BenchmarkCategory, typeof scoreStatistics>
     > = {};
@@ -102,12 +151,16 @@ export function aggregateJournal(
         .filter((task) => task.category === category)
         .map((task) => task.id);
       const expectedCategoryTasks = new Set(expectedCategoryTaskIds);
-      categoryStatistics[category] = summarizeWeightedRepeats(
+      const categorySummary = summarizeWeightedRepeats(
         observations.filter((observation) =>
           expectedCategoryTasks.has(observation.taskId)
         ),
         expectedCategoryTaskIds
-      ).statistics;
+      );
+      categoryStatistics[category] = categorySummary.statistics;
+      if (categorySummary.mean !== null) {
+        categories[category] = categorySummary.mean;
+      }
     }
 
     const reports = modelEvents.map((event) => event.report);
@@ -122,7 +175,9 @@ export function aggregateJournal(
       modelId: model.id,
       label: model.label,
       provider: model.provider,
-      score: totalWeight === 0 ? 0 : weightedScore / totalWeight,
+      score:
+        scoreSummary.mean ??
+        (totalWeight === 0 ? 0 : weightedScore / totalWeight),
       categories,
       scoreStatistics,
       categoryStatistics,
