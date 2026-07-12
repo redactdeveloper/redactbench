@@ -1,11 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { BenchmarkCategory, Report } from "../../src/contracts.js";
+import type {
+  BenchmarkCategory,
+  Report,
+  ReportScoreStatistics
+} from "../../src/contracts.js";
+import {
+  summarizeWeightedRepeats,
+  weightedMean
+} from "../../src/statistics.js";
 
 import { AttemptDetails, type DetailTab } from "./components/AttemptDetails.js";
 import { Icon } from "./components/Icon.js";
 import { Leaderboard, type LeaderboardRow, type SortKey } from "./components/Leaderboard.js";
 import { RecoveryPanel } from "./components/RecoveryPanel.js";
+import { ReliabilityNote } from "./components/ReliabilityNote.js";
 import { SummaryStrip } from "./components/SummaryStrip.js";
 import {
   CATEGORY_LABELS,
@@ -37,6 +46,30 @@ function totalKnownCost(attempts: Report["attempts"]): number | null {
     return null;
   }
   return attempts.reduce((sum, attempt) => sum + (attempt.metrics.costUsd ?? 0), 0);
+}
+
+function weightedAttemptScore(attempts: Report["attempts"]): number | null {
+  return weightedMean(
+    attempts.map((attempt) => ({
+      score: attempt.score,
+      weight: attempt.taskWeight
+    }))
+  );
+}
+
+function filteredStatistics(
+  attempts: Report["attempts"],
+  expectedTaskIds: readonly string[]
+): ReportScoreStatistics {
+  return summarizeWeightedRepeats(
+    attempts.map((attempt) => ({
+      repeat: attempt.repeat,
+      score: attempt.score,
+      taskId: attempt.taskId,
+      weight: attempt.taskWeight
+    })),
+    expectedTaskIds
+  ).statistics;
 }
 
 function runLabel(report: Report): string {
@@ -147,14 +180,28 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
     );
   }, [category, report, taskId]);
 
+  const expectedFilteredTaskIds = useMemo(
+    () =>
+      taskId === "all"
+        ? [...new Set(filteredAttempts.map((attempt) => attempt.taskId))]
+        : [taskId],
+    [filteredAttempts, taskId]
+  );
+
   const rows = useMemo<LeaderboardRow[]>(() => {
     if (!report) return [];
     const isFiltered = category !== "all" || taskId !== "all";
     const nextRows = report.leaderboard.map((model) => {
       const attempts = filteredAttempts.filter((attempt) => attempt.modelId === model.modelId);
+      const statistics = isFiltered
+        ? category !== "all" && taskId === "all" && model.categoryStatistics[category]
+          ? model.categoryStatistics[category]
+          : filteredStatistics(attempts, expectedFilteredTaskIds)
+        : model.scoreStatistics;
       return {
         model,
-        score: isFiltered ? average(attempts.map((attempt) => attempt.score)) : model.score,
+        score: isFiltered ? weightedAttemptScore(attempts) : model.score,
+        statistics,
         ttft: isFiltered ? average(attempts.map((attempt) => attempt.metrics.ttftMs)) : model.metrics.avgTtftMs,
         speed: isFiltered ? average(attempts.map((attempt) => attempt.metrics.outputTokensPerSecond)) : model.metrics.outputTokensPerSecond,
         cost: isFiltered ? totalKnownCost(attempts) : model.metrics.totalCostUsd
@@ -170,7 +217,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
       return (leftValue - rightValue) * direction;
     };
     return nextRows.sort(compare);
-  }, [category, filteredAttempts, report, sortDirection, sortKey, taskId]);
+  }, [category, expectedFilteredTaskIds, filteredAttempts, report, sortDirection, sortKey, taskId]);
 
   if (error) return <ErrorState message={error} />;
   if (!report) return <LoadingState />;
@@ -179,9 +226,9 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
   if (!selectedModel) return <ErrorState message="The report contains no model results." />;
 
   const selectedAttempts = filteredAttempts.filter((attempt) => attempt.modelId === selectedModel.modelId);
-  const summaryScore = category === "all" && taskId === "all"
-    ? selectedModel.score
-    : average(selectedAttempts.map((attempt) => attempt.score));
+  const selectedRow = rows.find((row) => row.model.modelId === selectedModel.modelId);
+  const summaryScore = selectedRow?.score ?? null;
+  const summaryStatistics = selectedRow?.statistics ?? selectedModel.scoreStatistics;
   const summaryTtft = category === "all" && taskId === "all"
     ? selectedModel.metrics.avgTtftMs
     : average(selectedAttempts.map((attempt) => attempt.metrics.ttftMs));
@@ -254,7 +301,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
         <main id="overview">
           <section className="run-heading">
             <h1>{runLabel(report)}</h1>
-            <p>{report.run.modelCount} MODELS <i>·</i> {report.run.taskCount} TASKS <i>·</i> SCORER v{report.scorerVersion.split(".")[0]}</p>
+            <p>{report.run.modelCount} MODELS <i>·</i> {report.run.taskCount} TASKS <i>·</i> R{report.run.repeatCount} · C{report.run.concurrency} · SEED {report.run.seed ?? "—"} <i>·</i> SCORER v{report.scorerVersion.split(".")[0]}</p>
           </section>
 
           <SummaryStrip items={[
@@ -264,6 +311,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
             { label: "Total cost", value: formatUsd(summaryCost) },
             { hiddenOnMobile: true, label: "Cost / correct", value: formatUsd(costPerCorrect) }
           ]}/>
+          <ReliabilityNote statistics={summaryStatistics}/>
 
           <section className="leaderboard-section" id="leaderboard">
             <div className="leaderboard-toolbar">

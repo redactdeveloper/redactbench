@@ -331,6 +331,28 @@ label:has(input:focus-visible) {
   white-space: nowrap;
 }
 
+.reliability-note {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 30px 0;
+  padding: 7px 12px;
+  border-left: 2px solid var(--color-accent);
+  color: var(--color-muted);
+  background: var(--color-bg-elevated);
+  font: 400 10px/1.4 var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.reliability-note b {
+  flex: none;
+  color: var(--color-accent);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
 .leaderboard-section {
   padding: 19px 30px 14px;
 }
@@ -417,7 +439,7 @@ label:has(input:focus-visible) {
 }
 
 .leaderboard-table {
-  min-width: 1050px;
+  min-width: 1170px;
   table-layout: fixed;
 }
 
@@ -504,6 +526,15 @@ label:has(input:focus-visible) {
 .score-cell,
 .is-selected .score-cell {
   color: var(--color-accent) !important;
+}
+
+.score-confidence {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .sort-button,
@@ -1121,6 +1152,14 @@ label:has(input:focus-visible) {
   .summary-item dd {
     margin-top: 9px;
     font-size: clamp(15px, 4.6vw, 20px);
+  }
+
+  .reliability-note {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+    margin: 10px 16px 0;
+    padding: 8px 10px;
   }
 
   .leaderboard-section {

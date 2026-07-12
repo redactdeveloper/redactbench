@@ -15,12 +15,15 @@ export interface LeaderboardRow {
   cost: number | null;
   model: Report["leaderboard"][number];
   score: number | null;
+  statistics: Report["leaderboard"][number]["scoreStatistics"];
   speed: number | null;
   ttft: number | null;
 }
 
 const CATEGORY_COLUMNS: Array<{ category: BenchmarkCategory; label: string }> = [
+  { category: "algorithms", label: "Algo" },
   { category: "debugging", label: "Debug" },
+  { category: "refactoring", label: "Refactor" },
   { category: "security", label: "Security" },
   { category: "ui", label: "UI" },
   { category: "reasoning", label: "Reasoning" },
@@ -89,7 +92,14 @@ export function Leaderboard({
                       <span>{row.model.label}</span>
                     </button>
                   </td>
-                  <td className="score-cell">{formatPercent(row.score)}</td>
+                  <td className="score-cell">
+                    <span>{formatPercent(row.score)}</span>
+                    {row.statistics.confidence95 ? (
+                      <small className="score-confidence">
+                        {formatPercent(row.statistics.confidence95.lower)}–{formatPercent(row.statistics.confidence95.upper)}
+                      </small>
+                    ) : null}
+                  </td>
                   {CATEGORY_COLUMNS.map((column) => (
                     <td className="category-column" key={column.category}>
                       {formatPercent(row.model.categories[column.category])}

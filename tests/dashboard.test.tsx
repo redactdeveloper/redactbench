@@ -42,6 +42,48 @@ describe("dashboard", () => {
     expect(within(details as HTMLElement).getByText("Parses valid ports")).toBeTruthy();
   });
 
+  it("preserves task weights when filters recalculate a score", async () => {
+    const user = userEvent.setup();
+    const weighted = structuredClone(report);
+    const debug = weighted.attempts.find(
+      (attempt) => attempt.modelId === "fixture-fast" && attempt.category === "debugging"
+    )!;
+    const pushback = weighted.attempts.find(
+      (attempt) => attempt.modelId === "fixture-fast" && attempt.category === "hallucination"
+    )!;
+    debug.score = 1;
+    debug.taskWeight = 1;
+    pushback.category = "debugging";
+    pushback.score = 0;
+    pushback.taskWeight = 3;
+
+    render(<Dashboard initialReport={weighted} />);
+    await user.click(screen.getByRole("button", { name: "Fixture Fast" }));
+    await user.selectOptions(screen.getByLabelText("Category filter"), "debugging");
+
+    expect(screen.getByLabelText("Overall score: 25.0%")).toBeTruthy();
+  });
+
+  it("shows repeat uncertainty and the run conditions that affect comparisons", () => {
+    const repeated = structuredClone(report);
+    repeated.run.repeatCount = 3;
+    repeated.run.concurrency = 2;
+    repeated.run.seed = 73;
+    repeated.leaderboard[0]!.scoreStatistics = {
+      confidence95: { lower: 0.9, upper: 1 },
+      sampleCount: 3,
+      standardDeviation: 0.04,
+      standardError: 0.04 / Math.sqrt(3)
+    };
+
+    render(<Dashboard initialReport={repeated} />);
+
+    expect(screen.getByLabelText("Repeat reliability").textContent).toContain(
+      "n=3 complete repeats · 95% CI 90.0%–100.0% · SD 4.0 pp"
+    );
+    expect(screen.getByText(/R3 · C2 · SEED 73/)).toBeTruthy();
+  });
+
   it("opens CLI instructions and closes them with Escape", async () => {
     const user = userEvent.setup();
     render(<Dashboard initialReport={report} />);
