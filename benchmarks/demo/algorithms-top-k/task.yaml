@@ -1,0 +1,28 @@
+schemaVersion: 1
+id: top-k-frequent
+title: Implement deterministic top-k frequency
+category: algorithms
+description: Rank distinct numbers by frequency without mutating the caller's input.
+prompt: Implement topKFrequent so it returns at most k distinct numbers ordered by descending frequency, breaking equal-frequency ties by ascending numeric value. Return an empty array when k is not a positive integer. Do not mutate values, and keep the exported function name and parameters unchanged.
+tags: [smoke, javascript, deterministic]
+checks:
+  - id: frequency-ranking
+    label: Ranks by frequency
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, frequency]
+    weight: 2
+  - id: deterministic-ties
+    label: Resolves ties deterministically
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, ties]
+    weight: 2
+  - id: edge-cases
+    label: Handles k and empty inputs
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, edges]
+    weight: 1
+  - id: input-immutability
+    label: Preserves the input array
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, immutable]
+    weight: 1

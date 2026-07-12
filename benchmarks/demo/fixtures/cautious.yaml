@@ -1,5 +1,24 @@
 schemaVersion: 1
 responses:
+  "top-k-frequent:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/top-k.mjs b/top-k.mjs
+      --- a/top-k.mjs
+      +++ b/top-k.mjs
+      @@ -1,3 +1,4 @@
+       export function topKFrequent(values, k) {
+      +  if (!Array.isArray(values) || !Number.isInteger(k) || k <= 0) return [];
+         return [...new Set(values)].slice(0, k);
+       }
+      </redactbench_patch>
+      <redactbench_notes>
+      Adds conservative argument validation while preserving distinct-value behavior.
+      </redactbench_notes>
+    inputTokens: 395
+    outputTokens: 73
+    ttftMs: 980
+    durationMs: 2210
   "debug-get-user:final":
     text: |
       <redactbench_patch>
