@@ -23,6 +23,10 @@ export default defineConfig({
       use: { viewport: { height: 900, width: 1_440 } }
     },
     {
+      name: "tablet-768",
+      use: { hasTouch: true, viewport: { height: 1_024, width: 768 } }
+    },
+    {
       name: "mobile",
       use: { hasTouch: true, isMobile: true, viewport: { height: 844, width: 390 } }
     }

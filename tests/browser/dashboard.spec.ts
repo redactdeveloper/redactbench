@@ -15,7 +15,10 @@ test("renders real report data without browser errors or page overflow", async (
   });
 
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Run 2026-07-12 / demo");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("RedactBench Target Field");
+  await expect(page.getByRole("heading", { level: 2, name: "Run 2026-07-12 / demo" })).toBeVisible();
+  await expect(page.getByText("GPT-5.5 xHigh")).toBeVisible();
+  await expect(page.getByText("Not run")).toHaveCount(11);
   await expect(page.getByLabel("Overall score: 100.0%")).toBeVisible();
   await expect(page.getByRole("button", { exact: true, name: "Fixture Strong" })).toHaveAttribute("aria-pressed", "true");
 
@@ -58,7 +61,7 @@ test("renders real report data without browser errors or page overflow", async (
   expect(await page.evaluate(() => document.fonts.check('16px "IBM Plex Mono"'))).toBe(true);
 
   if (testInfo.project.name === "mobile") {
-    const tableOverflow = await page.locator(".table-scroll").evaluate((element) =>
+    const tableOverflow = await page.locator(".leaderboard-section .table-scroll").evaluate((element) =>
       element.scrollWidth > element.clientWidth
     );
     expect(tableOverflow).toBe(true);
@@ -69,6 +72,12 @@ test("renders real report data without browser errors or page overflow", async (
   if (testInfo.project.name === "mobile") {
     await page.screenshot({ fullPage: true, path: "tmp/qa/dashboard-mobile-full.png" });
   }
+
+  await page.getByLabel("Harness filter").selectOption("opencode");
+  await expect(page.getByText("GLM 5.2 Max")).toBeVisible();
+  await expect(page.getByText("Hy3 High")).toBeVisible();
+  await expect(page.getByText("GPT-5.5 xHigh")).toHaveCount(0);
+  await page.getByLabel("Harness filter").selectOption("all");
 
   await page.getByRole("button", { exact: true, name: "Fixture Fast" }).click();
   await expect(page.getByLabel("Overall score: 59.1%")).toBeVisible();

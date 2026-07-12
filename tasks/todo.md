@@ -467,11 +467,11 @@
 
 **Критерии приёмки:**
 
-- [ ] Отображаются 11 models, их provider/harness и честный `Not run` state.
-- [ ] Fixture demo results визуально отделены от target field.
-- [ ] Surface доступна с клавиатуры и responsive без page overflow.
+- [x] Отображаются 11 models, их provider/harness и честный `Not run` state.
+- [x] Fixture demo results визуально отделены от target field.
+- [x] Surface доступна с клавиатуры и responsive без page overflow.
 
-**Проверка:** component tests + Playwright 390/768/1440.
+**Проверка:** [x] 9 component tests; Playwright Chrome 390/768/1440/1536 — 4 passed, console/network errors и page overflow отсутствуют.
 
 ## Задача 27: Добавить credential/image readiness
 
@@ -492,3 +492,14 @@
 - [ ] Первый платный run требует budget confirmation и точных model identifiers.
 
 **Проверка:** per-adapter dry-run, затем opt-in live smoke.
+
+## Задача 29: Добавить `redactbench start`
+
+**Критерии приёмки:**
+
+- [ ] Команда одной операцией выполняет preflight → run/resume → report packaging → terminal summary.
+- [ ] Безопасный `--dry-run` не запускает harness containers и не делает model/API calls.
+- [ ] Default paths соответствуют target field/runtime manifest и основной suite, но имеют CLI overrides.
+- [ ] Ошибка readiness возникает до первого платного запроса и не раскрывает credentials.
+
+**Проверка:** CLI/unit contracts + fixture orchestration integration + target-field `start --dry-run`.

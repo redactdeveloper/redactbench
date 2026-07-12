@@ -383,6 +383,13 @@ typed field roster
 - Каждый adapter проходит бесплатный/local dry-run container contract до model calls.
 - Платный run начинается только после явного preflight budget и подтверждённых model IDs.
 
+### Задача 29: Единая команда `redactbench start`
+
+- Один entrypoint выполняет preflight, запускает или возобновляет run, упаковывает dashboard report и печатает итоговую таблицу.
+- Defaults указывают на target field/runtime manifest и benchmark suite; flags позволяют переопределить run ID, repeats, concurrency, seed и output root.
+- `--dry-run` выполняет полный безопасный preflight и показывает план без запуска harness containers и без model/API calls.
+- Ошибка любого preflight происходит до первого model request; успешный run оставляет journal, JSON report и статический dashboard в одном run directory.
+
 ## Definition of Done поверхности
 
 - [ ] Manifest содержит ровно 11 согласованных entrants и не содержит secrets.
@@ -390,3 +397,4 @@ typed field roster
 - [ ] Любая executable binding имеет `execution: docker`; host fallback отсутствует.
 - [ ] Hidden evaluator недоступен harness container.
 - [ ] Contract/component/security tests, typecheck, lint, build и browser smoke чистые.
+- [ ] `redactbench start --dry-run` доказывает готовность orchestration без model/API calls.

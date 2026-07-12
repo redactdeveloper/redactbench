@@ -5,6 +5,7 @@ import type {
   Report,
   ReportScoreStatistics
 } from "../../src/contracts.js";
+import type { BenchmarkField } from "../../src/field-contracts.js";
 import {
   summarizeWeightedRepeats,
   weightedMean
@@ -17,6 +18,8 @@ import { Leaderboard, type LeaderboardRow, type SortKey } from "./components/Lea
 import { RecoveryPanel } from "./components/RecoveryPanel.js";
 import { ReliabilityNote } from "./components/ReliabilityNote.js";
 import { SummaryStrip } from "./components/SummaryStrip.js";
+import { TargetField } from "./components/TargetField.js";
+import { loadField } from "./field.js";
 import {
   CATEGORY_LABELS,
   formatPercent,
@@ -30,10 +33,10 @@ import {
 type CategoryFilter = "all" | BenchmarkCategory;
 
 const NAV_ITEMS = [
-  ["Overview", "home", "#overview"],
-  ["Runs", "list", "#overview"],
-  ["Tasks", "code", "#leaderboard"],
-  ["Models", "cube", "#leaderboard"],
+  ["Field", "cube", "#field"],
+  ["Demo run", "home", "#overview"],
+  ["Results", "list", "#leaderboard"],
+  ["Tasks", "code", "#details"],
   ["Methodology", "book", "#status"]
 ] as const;
 
@@ -141,21 +144,28 @@ function NewRunDialog({ onClose }: { onClose: () => void }) {
 }
 
 function LoadingState() {
-  return <main className="state-screen"><span className="state-mark">R3</span><p>Loading verified report…</p></main>;
+  return <main className="state-screen"><span className="state-mark">R3</span><p>Loading target field and verified report…</p></main>;
 }
 
 function ErrorState({ message }: { message: string }) {
   return (
     <main className="state-screen state-screen--error">
       <span className="state-mark">R3</span>
-      <h1>Report unavailable</h1>
+      <h1>Benchmark surface unavailable</h1>
       <p>{message}</p>
-      <p>Generate it with <code>npm run bench:report</code> or load a valid report JSON.</p>
+      <p>Validate the field artifact and generate a report with <code>npm run bench:report</code>.</p>
     </main>
   );
 }
 
-export function Dashboard({ initialReport }: { initialReport?: Report }) {
+export function Dashboard({
+  initialField,
+  initialReport
+}: {
+  initialField?: BenchmarkField;
+  initialReport?: Report;
+}) {
+  const [field, setField] = useState<BenchmarkField | null>(initialField ?? null);
   const [report, setReport] = useState<Report | null>(initialReport ?? null);
   const [error, setError] = useState<string | null>(null);
   const [selectedModelId, setSelectedModelId] = useState(initialReport?.leaderboard[0]?.modelId ?? "");
@@ -168,19 +178,23 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (initialReport) return;
+    if (initialField && initialReport) return;
     let cancelled = false;
-    loadReport()
-      .then((nextReport) => {
+    Promise.all([
+      initialField ? Promise.resolve(initialField) : loadField(),
+      initialReport ? Promise.resolve(initialReport) : loadReport()
+    ])
+      .then(([nextField, nextReport]) => {
         if (cancelled) return;
+        setField(nextField);
         setReport(nextReport);
         setSelectedModelId(nextReport.leaderboard[0]?.modelId ?? "");
       })
       .catch((cause: unknown) => {
         if (!cancelled) setError(cause instanceof Error ? cause.message : "Unknown report error");
-      });
+    });
     return () => { cancelled = true; };
-  }, [initialReport]);
+  }, [initialField, initialReport]);
 
   const tasks = useMemo(() => {
     if (!report) return [];
@@ -243,7 +257,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
   }, [category, expectedFilteredTaskIds, filteredAttempts, report, sortDirection, sortKey, taskId]);
 
   if (error) return <ErrorState message={error} />;
-  if (!report) return <LoadingState />;
+  if (!field || !report) return <LoadingState />;
 
   const selectedModel = report.leaderboard.find((model) => model.modelId === selectedModelId) ?? report.leaderboard[0];
   if (!selectedModel) return <ErrorState message="The report contains no model results." />;
@@ -296,7 +310,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
   return (
     <div className="app-shell">
       <aside className={menuOpen ? "sidebar is-open" : "sidebar"} aria-label="Primary navigation">
-        <a className="brand" href="#overview" onClick={() => setMenuOpen(false)}><span>R3</span><b>REDACTBENCH</b></a>
+        <a className="brand" href="#field" onClick={() => setMenuOpen(false)}><span>R3</span><b>REDACTBENCH</b></a>
         <nav>
           {NAV_ITEMS.map(([label, icon, href], index) => (
             <a className={index === 0 ? "is-active" : ""} href={href} key={label} onClick={() => setMenuOpen(false)}>
@@ -309,7 +323,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
 
       <header className="mobile-header">
         <button aria-expanded={menuOpen} aria-label="Toggle navigation" className="icon-button" onClick={() => setMenuOpen((open) => !open)} type="button"><Icon name={menuOpen ? "x" : "menu"} size={28}/></button>
-        <a className="brand" href="#overview"><span>R3</span><b>REDACTBENCH</b></a>
+        <a className="brand" href="#field"><span>R3</span><b>REDACTBENCH</b></a>
       </header>
 
       <div className="workspace">
@@ -321,9 +335,12 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
           <button className="primary-action" onClick={() => setShowNewRun(true)} type="button"><Icon name="plus" size={21}/>New run</button>
         </header>
 
-        <main id="overview">
+        <main>
+          <TargetField field={field}/>
+          <section aria-labelledby="demo-run-title" className="demo-results" id="overview">
           <section className="run-heading">
-            <h1>{runLabel(report)}</h1>
+            <p className="run-kicker">Deterministic fixture regression · not target-field results</p>
+            <h2 id="demo-run-title">{runLabel(report)}</h2>
             <p>{report.run.modelCount} MODELS <i>·</i> {report.run.taskCount} TASKS <i>·</i> R{report.run.repeatCount} · C{report.run.concurrency} · SEED {report.run.seed ?? "—"} <i>·</i> SCORER v{report.scorerVersion.split(".")[0]}</p>
           </section>
 
@@ -352,6 +369,7 @@ export function Dashboard({ initialReport }: { initialReport?: Report }) {
             <RecoveryPanel attempt={recoveryAttempt} onViewChecks={showChecks}/>
             <AttemptDetails attempts={selectedAttempts} modelLabel={selectedModel.label} onTabChange={setDetailTab} tab={detailTab}/>
           </div>
+          </section>
         </main>
 
         <footer className="status-bar" id="status">

@@ -4,22 +4,41 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
+import fieldData from "../dashboard/public/field.json";
 import reportData from "../dashboard/public/report.json";
 import { Dashboard } from "../dashboard/src/App.js";
 import { ReportSchema } from "../src/contracts.js";
+import { BenchmarkFieldSchema } from "../src/field-contracts.js";
 
 const report = ReportSchema.parse(reportData);
+const field = BenchmarkFieldSchema.parse(fieldData);
 
 afterEach(() => {
   document.body.innerHTML = "";
 });
 
 describe("dashboard", () => {
+  it("shows the target field without inventing benchmark results", async () => {
+    const user = userEvent.setup();
+    render(<Dashboard initialField={field} initialReport={report} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "RedactBench Target Field" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Run 2026-07-12 / demo" })).toBeTruthy();
+    expect(screen.getByText("GPT-5.5 xHigh")).toBeTruthy();
+    expect(screen.getAllByText("Not run")).toHaveLength(11);
+
+    await user.selectOptions(screen.getByLabelText("Harness filter"), "opencode");
+    expect(screen.getByText("GLM 5.2 Max")).toBeTruthy();
+    expect(screen.getByText("Hy3 High")).toBeTruthy();
+    expect(screen.queryByText("GPT-5.5 xHigh")).toBeNull();
+    expect(screen.getAllByText("Not run")).toHaveLength(2);
+  });
+
   it("renders report-derived values and changes the selected model", async () => {
     const user = userEvent.setup();
-    render(<Dashboard initialReport={report} />);
+    render(<Dashboard initialField={field} initialReport={report} />);
 
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Run 2026-07-12 / demo");
+    expect(screen.getByRole("heading", { level: 2, name: "Run 2026-07-12 / demo" })).toBeTruthy();
     expect(screen.getByLabelText("Overall score: 100.0%")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Fixture Fast" }));
@@ -30,7 +49,7 @@ describe("dashboard", () => {
 
   it("filters scores and switches to hidden check evidence", async () => {
     const user = userEvent.setup();
-    render(<Dashboard initialReport={report} />);
+    render(<Dashboard initialField={field} initialReport={report} />);
 
     await user.click(screen.getByRole("button", { name: "Fixture Fast" }));
     await user.selectOptions(screen.getByLabelText("Category filter"), "context-recovery");
@@ -60,7 +79,7 @@ describe("dashboard", () => {
       (model) => model.modelId === "fixture-fast"
     )!.categoryStatistics.debugging;
 
-    render(<Dashboard initialReport={weighted} />);
+    render(<Dashboard initialField={field} initialReport={weighted} />);
     await user.click(screen.getByRole("button", { name: "Fixture Fast" }));
     await user.selectOptions(screen.getByLabelText("Category filter"), "debugging");
 
@@ -79,7 +98,7 @@ describe("dashboard", () => {
       standardError: 0.04 / Math.sqrt(3)
     };
 
-    render(<Dashboard initialReport={repeated} />);
+    render(<Dashboard initialField={field} initialReport={repeated} />);
 
     expect(screen.getByLabelText("Repeat reliability").textContent).toContain(
       "n=3 complete repeats · 95% CI 90.0%–100.0% · SD 4.0 pp"
@@ -89,7 +108,7 @@ describe("dashboard", () => {
 
   it("opens CLI instructions and closes them with Escape", async () => {
     const user = userEvent.setup();
-    render(<Dashboard initialReport={report} />);
+    render(<Dashboard initialField={field} initialReport={report} />);
 
     await user.click(screen.getByRole("button", { name: "New run" }));
     expect(screen.getByRole("dialog", { name: "Start a new run" })).toBeTruthy();
@@ -102,7 +121,7 @@ describe("dashboard", () => {
     const unsafe = structuredClone(report);
     unsafe.leaderboard[0]!.label = "<img src=x onerror=alert(1)>";
 
-    render(<Dashboard initialReport={unsafe} />);
+    render(<Dashboard initialField={field} initialReport={unsafe} />);
 
     expect(screen.getByText("<img src=x onerror=alert(1)>")).toBeTruthy();
     expect(document.querySelector("img")).toBeNull();
@@ -112,7 +131,7 @@ describe("dashboard", () => {
     const partialCost = structuredClone(report);
     partialCost.attempts.find((attempt) => attempt.modelId === "fixture-strong")!.metrics.costUsd = null;
 
-    render(<Dashboard initialReport={partialCost} />);
+    render(<Dashboard initialField={field} initialReport={partialCost} />);
 
     expect(screen.getByLabelText("Total cost: Not measured")).toBeTruthy();
   });
@@ -123,7 +142,7 @@ describe("dashboard", () => {
     missingRecovery.attempts = missingRecovery.attempts.filter(
       (attempt) => !(attempt.modelId === "fixture-cautious" && attempt.category === "context-recovery")
     );
-    render(<Dashboard initialReport={missingRecovery} />);
+    render(<Dashboard initialField={field} initialReport={missingRecovery} />);
 
     await user.selectOptions(screen.getByLabelText("Category filter"), "context-recovery");
 
