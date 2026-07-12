@@ -14,7 +14,15 @@ const runtimeInput = {
   execution: "docker",
   harness: "opencode",
   image: "redactbench/harness-opencode:local",
-  argv: ["opencode", "run", "--model", "{model}", "--prompt-file", "{promptFile}"],
+  argv: [
+    "opencode",
+    "run",
+    "--model",
+    "{model}",
+    "{modelArguments}",
+    "--prompt-file",
+    "{promptFile}"
+  ],
   promptTransport: "file",
   network: "redactbench-egress",
   credentialSecrets: [
@@ -114,6 +122,7 @@ describe("buildHarnessDockerArgs", () => {
             OPENCODE_CONFIG_DIR: auth
           },
           model: "hy3-high",
+          modelArguments: ["--variant", "high"],
           promptFile: prompt,
           secretFiles: { OPENROUTER_API_KEY: secretFile },
           workspaceDirectory: workspace
@@ -135,6 +144,8 @@ describe("buildHarnessDockerArgs", () => {
       );
       expect(serialized).not.toContain("--env OPENROUTER_API_KEY");
       expect(serialized).toContain("--model hy3-high");
+      expect(serialized).toContain("--variant high");
+      expect(serialized).not.toContain("{modelArguments}");
       expect(serialized).toContain("--prompt-file /run/redactbench/prompt.txt");
       expect(serialized).not.toContain("secret-value-must-not-enter-argv");
       expect(serialized).not.toContain("/evaluator");
@@ -156,6 +167,7 @@ describe("buildHarnessDockerArgs", () => {
           containerName: "redactbench-opencode-attempt",
           environment: { OPENCODE_CONFIG_DIR: auth },
           model: "hy3-high",
+          modelArguments: ["--variant", "high"],
           promptFile: prompt,
           secretFiles: {},
           workspaceDirectory: workspace

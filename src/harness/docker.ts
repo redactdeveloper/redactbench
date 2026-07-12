@@ -8,7 +8,12 @@ import { RedactBenchError } from "../errors.js";
 import { HarnessNameSchema } from "../field-contracts.js";
 import { SCHEMA_VERSION } from "../version.js";
 
-const ALLOWED_TEMPLATES = new Set(["{model}", "{promptFile}", "{workspace}"]);
+const ALLOWED_TEMPLATES = new Set([
+  "{model}",
+  "{modelArguments}",
+  "{promptFile}",
+  "{workspace}"
+]);
 const FORBIDDEN_ENV_NAMES = new Set([
   "DOCKER_HOST",
   "HOME",
@@ -33,6 +38,17 @@ const RuntimeArgumentSchema = z
     const templates = value.match(/\{[^}]+\}/gu) ?? [];
     return templates.every((template) => ALLOWED_TEMPLATES.has(template));
   }, "contains an unsupported template");
+
+export const HarnessModelArgumentsSchema = z
+  .array(
+    z
+      .string()
+      .min(1)
+      .max(1_024)
+      .refine((value) => !value.includes("\0"), "must not contain NUL bytes")
+      .refine((value) => !/\{[^}]+\}/u.test(value), "templates are not allowed")
+  )
+  .max(32);
 
 const CredentialMountSchema = z
   .object({
@@ -87,6 +103,15 @@ export const HarnessDockerRuntimeSchema = z
       });
     }
     const serializedArgv = runtime.argv.join("\n");
+    runtime.argv.forEach((argument, index) => {
+      if (argument.includes("{modelArguments}") && argument !== "{modelArguments}") {
+        context.addIssue({
+          code: "custom",
+          message: "{modelArguments} must occupy a complete argv item",
+          path: ["argv", index]
+        });
+      }
+    });
     if (!serializedArgv.includes("{model}")) {
       context.addIssue({
         code: "custom",
@@ -142,6 +167,7 @@ export interface HarnessDockerContext {
   containerName: string;
   environment: Readonly<Record<string, string | undefined>>;
   model: string;
+  modelArguments?: readonly string[];
   promptFile: string;
   secretFiles: Readonly<Record<string, string | undefined>>;
   workspaceDirectory: string;
@@ -215,6 +241,9 @@ export async function buildHarnessDockerArgs(
     "harness workspace"
   );
   const promptFile = await requirePath(context.promptFile, "file", "harness prompt");
+  const modelArguments = HarnessModelArgumentsSchema.parse(
+    context.modelArguments ?? []
+  );
 
   // Docker recommends file-mounted secrets over container environment values,
   // which may be exposed through container metadata or linked environments.
@@ -288,11 +317,15 @@ export async function buildHarnessDockerArgs(
       `type=bind,src=${secret.source},dst=${secret.target},readonly`
     ]),
     runtime.image,
-    ...runtime.argv.map((argument) =>
-      argument
-        .replaceAll("{model}", context.model)
-        .replaceAll("{promptFile}", "/run/redactbench/prompt.txt")
-        .replaceAll("{workspace}", "/workspace")
+    ...runtime.argv.flatMap((argument) =>
+      argument === "{modelArguments}"
+        ? modelArguments
+        : [
+            argument
+              .replaceAll("{model}", context.model)
+              .replaceAll("{promptFile}", "/run/redactbench/prompt.txt")
+              .replaceAll("{workspace}", "/workspace")
+          ]
     )
   ];
 
