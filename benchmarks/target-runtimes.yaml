@@ -5,7 +5,7 @@ runtimes:
       schemaVersion: 1
       execution: docker
       harness: codex
-      image: redactbench/harness-codex:0.144.1
+      image: redactbench/harness-codex:0.144.1-rb0.3.0
       argv: [redactbench-harness, --harness, codex, --model, "{model}", "{modelArguments}", --workspace, "{workspace}"]
       promptTransport: stdin
       network: redactbench-egress-openai
@@ -18,7 +18,7 @@ runtimes:
       schemaVersion: 1
       execution: docker
       harness: grok-build
-      image: redactbench/harness-grok:0.2.93
+      image: redactbench/harness-grok:0.2.93-rb0.3.0
       argv: [redactbench-harness, --harness, grok-build, --model, "{model}", "{modelArguments}", --workspace, "{workspace}", --prompt-file, "{promptFile}"]
       promptTransport: file
       network: redactbench-egress-xai
@@ -31,7 +31,7 @@ runtimes:
       schemaVersion: 1
       execution: docker
       harness: cursor
-      image: redactbench/harness-cursor:2026.07.09-a3815c0
+      image: redactbench/harness-cursor:2026.07.09-a3815c0-rb0.3.0
       argv: [redactbench-harness, --harness, cursor, --model, "{model}", "{modelArguments}", --workspace, "{workspace}", --prompt-file, "{promptFile}"]
       promptTransport: file
       network: redactbench-egress-cursor
@@ -44,7 +44,7 @@ runtimes:
       schemaVersion: 1
       execution: docker
       harness: agy
-      image: redactbench/harness-agy:1.1.1
+      image: redactbench/harness-agy:1.1.1-rb0.3.0
       argv: [redactbench-harness, --harness, agy, --model, "{model}", "{modelArguments}", --workspace, "{workspace}", --prompt-file, "{promptFile}"]
       promptTransport: file
       network: redactbench-egress-google
@@ -57,7 +57,7 @@ runtimes:
       schemaVersion: 1
       execution: docker
       harness: opencode
-      image: redactbench/harness-opencode:1.17.13
+      image: redactbench/harness-opencode:1.17.13-rb0.3.0
       argv: [redactbench-harness, --harness, opencode, --model, "{model}", "{modelArguments}", --workspace, "{workspace}", --prompt-file, "{promptFile}"]
       promptTransport: file
       network: redactbench-egress-zai
@@ -70,7 +70,7 @@ runtimes:
       schemaVersion: 1
       execution: docker
       harness: opencode
-      image: redactbench/harness-opencode:1.17.13
+      image: redactbench/harness-opencode:1.17.13-rb0.3.0
       argv: [redactbench-harness, --harness, opencode, --model, "{model}", "{modelArguments}", --workspace, "{workspace}", --prompt-file, "{promptFile}"]
       promptTransport: file
       network: redactbench-egress-openrouter

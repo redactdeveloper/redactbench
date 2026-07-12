@@ -30,6 +30,13 @@ export interface BenchmarkDefinition {
   tasks: LoadedTask[];
 }
 
+export interface BenchmarkSuiteDefinition {
+  suite: Suite;
+  suiteDirectory: string;
+  suiteFile: string;
+  tasks: LoadedTask[];
+}
+
 async function requireDirectory(path: string, label: string): Promise<void> {
   try {
     if (!(await stat(path)).isDirectory()) {
@@ -45,18 +52,12 @@ async function requireDirectory(path: string, label: string): Promise<void> {
   }
 }
 
-export async function loadBenchmarkDefinition(
-  suiteFileInput: string,
-  modelsFileInput: string
-): Promise<BenchmarkDefinition> {
+export async function loadSuiteDefinition(
+  suiteFileInput: string
+): Promise<BenchmarkSuiteDefinition> {
   const suiteFile = resolve(suiteFileInput);
-  const modelsFile = resolve(modelsFileInput);
   const suiteDirectory = dirname(suiteFile);
-  const modelConfigDirectory = dirname(modelsFile);
-  const [suite, models] = await Promise.all([
-    loadYamlConfig(suiteFile, SuiteSchema),
-    loadYamlConfig(modelsFile, ModelsSchema)
-  ]);
+  const suite = await loadYamlConfig(suiteFile, SuiteSchema);
   const tasks: LoadedTask[] = [];
   const taskIds = new Set<string>();
 
@@ -86,6 +87,20 @@ export async function loadBenchmarkDefinition(
     tasks.push({ directory, manifest, task, weight: suiteTask.weight });
   }
 
+  return { suite, suiteDirectory, suiteFile, tasks };
+}
+
+export async function loadBenchmarkDefinition(
+  suiteFileInput: string,
+  modelsFileInput: string
+): Promise<BenchmarkDefinition> {
+  const modelsFile = resolve(modelsFileInput);
+  const modelConfigDirectory = dirname(modelsFile);
+  const [suiteDefinition, models] = await Promise.all([
+    loadSuiteDefinition(suiteFileInput),
+    loadYamlConfig(modelsFile, ModelsSchema)
+  ]);
+
   for (const model of models.models) {
     if (model.provider === "fixture") {
       const fixtureFile = await resolveContainedRealPath(
@@ -100,10 +115,7 @@ export async function loadBenchmarkDefinition(
     modelConfigDirectory,
     models,
     modelsFile,
-    suite,
-    suiteDirectory,
-    suiteFile,
-    tasks
+    ...suiteDefinition
   };
 }
 

@@ -32,6 +32,8 @@ Snapshot denylist снижает риск случайной утечки, но 
 
 ## Provider credentials и transport
 
+### Direct API runs
+
 Поддерживаются только фиксированные environment names:
 
 ```text
@@ -43,6 +45,23 @@ GEMINI_API_KEY
 Ключи не входят в prompt, journal или report. Adapter endpoints фиксированы в коде, redirects запрещены, provider errors проходят credential-shaped redaction. Raw Authorization headers не логируются. `.env*`, `*.key` и `*.pem` исключены из Git.
 
 RedactBench не загружает `.env` автоматически. Передавайте secrets через окружение процесса или отдельный secret manager. Не включайте shell tracing рядом с exports.
+
+### `redactbench start` и agent harnesses
+
+Целевой Docker-only run не передаёт ключи в argv, YAML или container environment. Preflight проверяет только тип и наличие источника, а ошибки содержат имя readiness check без значения. Перед запуском создаются временные owner-only копии только следующих файлов:
+
+```text
+~/.codex/auth.json
+~/.grok/auth.json
+~/.config/cursor/auth.json
+~/.gemini/antigravity-cli/antigravity-oauth-token
+~/.config/redactbench/secrets/zai-api-key
+~/.config/redactbench/secrets/openrouter-api-key
+```
+
+Полные home/config directories не копируются. OAuth profiles монтируются read-only в `/auth/<harness>`, а OpenCode keys — как отдельные read-only `/run/secrets/*`. Common runner переносит профиль во временный container HOME; root filesystem остаётся read-only, а `/tmp` уничтожается вместе с container.
+
+Repository считается недоверенным. Codex запускается с `workspace-write`, Grok — с `strict`, Cursor и AGY — со встроенным sandbox, OpenCode запрещает `external_directory`, web, task и skill tools. Эти ограничения уменьшают доступ model-driven shell к auth state, но должны проверяться заново при каждом обновлении CLI.
 
 ## Model response и patch
 
@@ -80,6 +99,10 @@ Mounts:
 В container попадают только `CI`, `HOME` и `REDACTBENCH_RESPONSE_FILE`. Provider keys и host environment не передаются. Check вызывается как argv без shell. Timeout инициирует `docker kill`; stdout/stderr ограничены task cap.
 
 Если Docker недоступен, run завершается до provider calls. Небезопасного host fallback нет.
+
+Agent harness containers используют отдельную границу: новый `docker run` на каждый обычный attempt и на каждую Context Recovery phase, writable `/workspace`, read-only root, UID/GID `65532:65532`, dropped capabilities, bounded CPU/memory/PIDs/output/time и scoped credential mounts. `/evaluator` в них отсутствует. После ответа grader по-прежнему запускается отдельно с `--network none`.
+
+Сети `redactbench-egress-*` — user-defined bridges для разделения harnesses, а не destination allowlist. Они разрешают CLI связаться со своим provider, но сами по себе не предотвращают SSRF/exfiltration в произвольный внешний адрес. Для запуска adversarial repository нужен host firewall или egress proxy, разрешающий только проверенные provider endpoints. До его появления target run предназначен для доверенного versioned suite/workspace.
 
 ### Что Docker boundary не решает
 

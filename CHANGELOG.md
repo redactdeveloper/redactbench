@@ -2,6 +2,22 @@
 
 Все заметные изменения RedactBench документируются в этом файле. Формат следует Keep a Changelog, версии — Semantic Versioning.
 
+## [0.3.0] - 2026-07-12
+
+### Added
+
+- Target field из 11 model/harness entrants, включая GPT-5.5 xHigh, с точными provider model IDs и reasoning variants.
+- Docker-only workspace adapters для Codex, Grok Build, Cursor Agent, AGY и OpenCode; Context Recovery использует новый container на каждую фазу.
+- `redactbench start` с full preflight, safe `--dry-run`, automatic image/network preparation, run/resume, static report packaging и terminal leaderboard.
+- Scoped readiness/staging для четырёх OAuth profiles и двух secret files без сериализации credential values.
+- Dashboard target-field surface с provider/harness filters и честным `Not run` состоянием до первого реального benchmark.
+
+### Security
+
+- Harness containers работают non-root с read-only root, dropped capabilities, bounded resources и без evaluator mount.
+- Codex/Grok/Cursor/AGY/OpenCode получают встроенные filesystem/tool sandbox policies; hidden graders остаются network-disabled.
+- Документировано, что user-defined provider bridges не являются destination egress allowlist и требуют proxy/firewall для adversarial repositories.
+
 ## [0.2.0] - 2026-07-12
 
 ### Added

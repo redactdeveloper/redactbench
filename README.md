@@ -1,6 +1,6 @@
 # RedactBench
 
-RedactBench — локальный воспроизводимый полигон для сравнения coding-моделей. Он отправляет одинаковые задачи напрямую в OpenAI, Anthropic или Google, принимает текст либо unified diff, запускает скрытые проверки в изолированных Docker-контейнерах, измеряет latency/usage/cost и собирает статический интерактивный отчёт.
+RedactBench — локальный воспроизводимый полигон для сравнения coding-моделей. Он запускает одинаковые задачи через Codex, Grok Build, Cursor Agent, AGY или OpenCode, выполняет каждый agent attempt в отдельном Docker-контейнере, запускает скрытые проверки в независимых grader-контейнерах, измеряет latency/usage/cost и собирает статический интерактивный отчёт. Прямые API adapters OpenAI, Anthropic и Google сохранены для custom runs.
 
 Отдельная категория **Context Recovery** проверяет продолжение работы после принудительного сброса истории: первая фаза оставляет изменённый репозиторий, Git-коммит и заметки, а вторая получает новый stateless-запрос и должна сохранить сделанное и завершить задачу.
 
@@ -18,8 +18,56 @@ RedactBench — локальный воспроизводимый полигон
 - repeat-level SD/SE/95% Student-t interval по полным повторам и явные `repeat/concurrency/seed`;
 - React-dashboard с weighted-фильтрами, reliability, деталями checks, импортом и экспортом отчёта;
 - deterministic smoke-suite по всем восьми категориям.
+- целевое поле из 11 model/harness связок и команда `redactbench start`, которая делает preflight, build/prepare, run/resume, report packaging и terminal summary.
 
-## Быстрый запуск
+## Целевой benchmark одной командой
+
+Нужны Node.js 22+, Git, работающий Docker daemon и уже установленные host CLI: Codex `0.144.1`, Grok `0.2.93`, Cursor Agent `2026.07.09-a3815c0`, AGY `1.1.1`, OpenCode `1.17.13`. Host CLI используются только как источник зафиксированных binaries и локального auth state; каждый model attempt всё равно выполняется в новом контейнере.
+
+```bash
+npm ci
+npm run build
+npm link
+redactbench start --dry-run
+```
+
+`--dry-run` валидирует target field, 8 задач, 11 bindings, Docker daemon, host CLIs, образы, сети и только наличие credentials. Он не запускает harness containers и не делает model/API requests. В готовом окружении итог должен показывать `Credentials 6/6`, `Images 5/5`, `Networks 6/6`.
+
+OAuth-профили по умолчанию берутся из минимальных allowlisted файлов:
+
+| Harness | Источник |
+|---|---|
+| Codex | `~/.codex/auth.json` |
+| Grok Build | `~/.grok/auth.json` |
+| Cursor Agent | `~/.config/cursor/auth.json` |
+| AGY | `~/.gemini/antigravity-cli/antigravity-oauth-token` |
+
+Для GLM 5.2 Max и Hy3 High нужны два отдельных файла, содержащих только соответствующий перевыпущенный ключ:
+
+```bash
+install -d -m 700 ~/.config/redactbench/secrets
+$EDITOR ~/.config/redactbench/secrets/zai-api-key
+$EDITOR ~/.config/redactbench/secrets/openrouter-api-key
+chmod 600 ~/.config/redactbench/secrets/*
+```
+
+Ключи, когда-либо отправленные в чат или лог, считаются раскрытыми: перед benchmark их нужно отозвать и создать заново. RedactBench не принимает значения ключей в YAML, argv или Docker environment; `start` копирует secret-файлы во временное owner-only хранилище и монтирует их read-only только в соответствующий OpenCode container.
+
+После зелёного dry-run целевой прогон запускается буквально так:
+
+```bash
+redactbench start
+```
+
+По умолчанию это `11 × 8 × repeat 1 = 88` attempts с concurrency `1` и seed `20260712`. Отсутствующие images и provider bridge networks создаются автоматически. По завершении команда печатает leaderboard, run ID и путь к `runs/<run-id>/report/index.html`. Для надёжного resume используйте один и тот же ID:
+
+```bash
+redactbench start --run-id target-2026-07-13
+```
+
+`--repeat 3` полезнее статистически, но примерно утраивает число модельных попыток и расход. Перед платным прогоном отдельно подтвердите бюджет. User-defined bridge networks изолируют containers друг от друга, но не являются destination allowlist; для adversarial repositories нужен provider-filtered egress proxy/firewall, описанный в threat model.
+
+## Быстрый fixture demo
 
 Нужны Node.js 22+, Git и работающий Docker daemon. При первом прогоне Docker может скачать `node:22-alpine`; сами hidden checks запускаются с `--network none`.
 
@@ -85,6 +133,7 @@ npm run redactbench -- serve \
 
 | Команда | Назначение |
 |---|---|
+| `redactbench start [--dry-run]` | Подготовить и запустить всё целевое поле, затем собрать и вывести результат |
 | `npm run redactbench -- validate …` | Проверить suite, tasks, models и fixtures без запуска Docker/API |
 | `npm run redactbench -- run …` | Запустить или продолжить benchmark run |
 | `npm run redactbench -- report …` | Собрать self-contained static report из journal |
@@ -104,7 +153,12 @@ CLI возвращает стабильные exit codes: config `2`, provider `
 ```text
 runs/<run-id>/
 ├── journal.jsonl   # append-only source of truth с hash chain
-└── run.json        # текущая агрегированная проекция
+├── run.json        # текущая агрегированная проекция
+├── start.json      # target field, image IDs и network readiness
+└── report/
+    ├── index.html  # self-contained entrypoint результата
+    ├── assets/
+    └── report.json
 
 reports/<run-id>/
 ├── index.html
@@ -143,9 +197,10 @@ fsync hash-chained journal → report/dashboard
 - [ADR-002: Context Recovery v1](docs/decisions/002-context-recovery-v1.md)
 - [ADR-003: независимые checks и repeat uncertainty](docs/decisions/003-check-isolation-and-repeat-uncertainty.md)
 - [ADR-004: Docker-only harness execution](docs/decisions/004-docker-harness-boundary.md)
+- [ADR-005: one-command target orchestration](docs/decisions/005-one-command-target-orchestration.md)
 - [Визуальная спецификация](design/DESIGN.md)
 
-## Честные ограничения v0.2
+## Честные ограничения v0.3
 
 - Обычный coding-attempt — один запрос с полным patch, а не интерактивный tool loop `inspect → edit → run → observe`.
 - Context Recovery — два stateless patch-запроса. Вторая фаза получает post-phase-1 snapshot, Git summary и заметки, но не conversation history.
@@ -154,6 +209,7 @@ fsync hash-chained journal → report/dashboard
 - Стоимость корректна только при наличии provider usage и вручную зафиксированного pricing.
 - Journal сохраняет config/prompt/response hashes и Docker image IDs, но ещё не фиксирует полный hardware fingerprint.
 - Docker boundary рассчитана на локальный benchmark, а не на hostile multi-tenant execution service.
+- Provider bridge networks пока не фильтруют destination egress. Встроенные agent sandboxes ограничивают filesystem/tool access, но не заменяют host firewall или egress proxy для adversarial repositories.
 - Hosted leaderboard, аккаунты, БД и автоматическое скачивание произвольных репозиториев не входят в MVP.
 
 ## Разработка

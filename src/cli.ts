@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 import { reportCommand } from "./commands/report.js";
 import { runCommand } from "./commands/run.js";
+import {
+  formatStartResult,
+  startCommand,
+  type StartCommandOptions,
+  type StartCommandResult
+} from "./commands/start.js";
 import { validateCommand } from "./commands/validate.js";
 import { isRedactBenchError, RedactBenchError } from "./errors.js";
 import { serveReport } from "./server.js";
@@ -19,6 +26,7 @@ export interface CliDependencies {
   env?: Readonly<Record<string, string | undefined>>;
   now?: () => number;
   preflightDocker?: () => Promise<void>;
+  start?: (options: StartCommandOptions) => Promise<StartCommandResult>;
   stderr?: OutputStream;
   stdout?: OutputStream;
 }
@@ -26,6 +34,7 @@ export interface CliDependencies {
 const HELP = `${BENCHMARK_NAME} ${VERSION}
 
 Usage:
+  redactbench start [--dry-run] [options]
   redactbench validate --suite <suite.yaml> --models <models.yaml>
   redactbench run --suite <suite.yaml> --models <models.yaml> [options]
   redactbench report --journal <journal.jsonl> --out <directory>
@@ -39,6 +48,12 @@ Run options:
   --repeat <1..100>      Repetitions per task/model (default: 1)
   --concurrency <1..8>   Concurrent attempts (default: 1)
   --seed <uint32>        Deterministically shuffle attempt order
+
+Start defaults:
+  --field benchmarks/target-field.yaml
+  --runtimes benchmarks/target-runtimes.yaml
+  --suite benchmarks/demo/suite.yaml
+  --repeat 1 · --concurrency 1 · --seed 20260712
 
 Global options:
   -h, --help
@@ -187,6 +202,50 @@ async function handleRun(
   );
 }
 
+async function handleStart(
+  args: string[],
+  dependencies: Required<Pick<CliDependencies, "env" | "now" | "stdout">> &
+    Pick<CliDependencies, "start">
+): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    allowPositionals: false,
+    options: {
+      concurrency: { type: "string" },
+      "dry-run": { type: "boolean" },
+      field: { type: "string" },
+      help: { short: "h", type: "boolean" },
+      out: { type: "string" },
+      repeat: { type: "string" },
+      "run-id": { type: "string" },
+      runtimes: { type: "string" },
+      seed: { type: "string" },
+      suite: { type: "string" }
+    },
+    strict: true
+  });
+  if (values.help) {
+    dependencies.stdout.write(HELP);
+    return;
+  }
+  const runId = values["run-id"] ?? defaultRunId(dependencies.now());
+  validateRunId(runId);
+  const options: StartCommandOptions = {
+    concurrency: integerOption(values.concurrency, 1, "concurrency", 1, 8),
+    dryRun: values["dry-run"] ?? false,
+    env: dependencies.env,
+    fieldFile: values.field ?? "benchmarks/target-field.yaml",
+    outDirectory: values.out ?? "runs",
+    repeatCount: integerOption(values.repeat, 1, "repeat", 1, 100),
+    runId,
+    runtimesFile: values.runtimes ?? "benchmarks/target-runtimes.yaml",
+    seed: integerOption(values.seed, 20_260_712, "seed", 0, 4_294_967_295),
+    suiteFile: values.suite ?? "benchmarks/demo/suite.yaml"
+  };
+  const result = await (dependencies.start ?? startCommand)(options);
+  dependencies.stdout.write(formatStartResult(result));
+}
+
 async function handleReport(
   args: string[],
   stdout: OutputStream,
@@ -260,6 +319,14 @@ export async function main(
 
     const [command, ...args] = argv;
     switch (command) {
+      case "start":
+        await handleStart(args, {
+          env,
+          now,
+          stdout,
+          ...(dependencies.start ? { start: dependencies.start } : {})
+        });
+        break;
       case "validate":
         await handleValidate(args, stdout);
         break;
@@ -298,10 +365,22 @@ export async function main(
   }
 }
 
-const entrypoint = process.argv[1]
-  ? pathToFileURL(resolve(process.argv[1])).href
-  : "";
-if (import.meta.url === entrypoint) {
+export function isMainModule(
+  moduleUrl: string,
+  entrypoint: string | undefined
+): boolean {
+  if (!entrypoint) return false;
+  try {
+    return (
+      realpathSync(fileURLToPath(moduleUrl)) ===
+      realpathSync(resolve(entrypoint))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule(import.meta.url, process.argv[1])) {
   void main().then((exitCode) => {
     process.exitCode = exitCode;
   });

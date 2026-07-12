@@ -477,30 +477,30 @@
 
 **Критерии приёмки:**
 
-- [ ] Проверяется наличие, но никогда не сериализуется значение секрета.
-- [ ] Profile mounts read-only и scoped по harness.
+- [x] Проверяется наличие, но никогда не сериализуется значение секрета.
+- [x] Profile mounts read-only и scoped по harness.
 - [ ] Exposed credentials перевыпущены до платного запуска.
 
-**Проверка:** redaction/absence tests + manual preflight with names only.
+**Проверка:** presence/size/mode/redaction tests; minimal allowlisted staging; production preflight выводит только два отсутствующих readiness name, без значений.
 
 ## Задача 28: Подключить harness adapters инкрементально
 
 **Критерии приёмки:**
 
-- [ ] Codex, Grok, Cursor, AGY и OpenCode имеют отдельные container adapters.
+- [x] Codex, Grok, Cursor, AGY и OpenCode имеют отдельные container adapters.
 - [x] Все 11 entrants привязаны к проверенным CLI model IDs/variants и отдельным Docker runtime definitions.
 - [x] Context Recovery создаёт новый container для phase 2 и передаёт только checkpoint workspace/Git/notes.
 - [ ] Первый платный run требует budget confirmation и точных model identifiers.
 
-**Проверка:** binding/runtime contracts — 17 passed, включая real Docker dry-run; workspace adapter + Context Recovery contracts — 11 passed; далее per-CLI image dry-run и opt-in live smoke.
+**Проверка:** binding/runtime contracts — 17 passed, включая real Docker dry-run; workspace adapter + Context Recovery contracts — 11 passed; пять pinned CLI images собраны и прошли non-root/read-only/no-network version smoke. Live model smoke оставлен на явно оплачиваемый прогон.
 
 ## Задача 29: Добавить `redactbench start`
 
 **Критерии приёмки:**
 
-- [ ] Команда одной операцией выполняет preflight → run/resume → report packaging → terminal summary.
-- [ ] Безопасный `--dry-run` не запускает harness containers и не делает model/API calls.
-- [ ] Default paths соответствуют target field/runtime manifest и основной suite, но имеют CLI overrides.
-- [ ] Ошибка readiness возникает до первого платного запроса и не раскрывает credentials.
+- [x] Команда одной операцией выполняет preflight → run/resume → report packaging → terminal summary.
+- [x] Безопасный `--dry-run` не запускает harness containers и не делает model/API calls.
+- [x] Default paths соответствуют target field/runtime manifest и основной suite, но имеют CLI overrides.
+- [x] Ошибка readiness возникает до первого платного запроса и не раскрывает credentials.
 
-**Проверка:** CLI/unit contracts + fixture orchestration integration + target-field `start --dry-run`.
+**Проверка:** 17 CLI/readiness/runner/orchestration tests; real build пяти pinned images; non-root/read-only CLI smoke; шесть provider bridges; production `start --dry-run` — 11 entrants / 8 tasks / 88 attempts, без model/API calls.
