@@ -61,6 +61,31 @@ responses:
     outputTokens: 82
     ttftMs: 1010
     durationMs: 2340
+  "contain-document-reads:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/document-store.mjs b/document-store.mjs
+      --- a/document-store.mjs
+      +++ b/document-store.mjs
+      @@ -2,6 +2,9 @@
+       import { join } from "node:path";
+      -
+      +
+       export async function readDocument(root, name) {
+      +  if (typeof name !== "string" || name.includes("..") || name.includes("\0")) {
+      +    return null;
+      +  }
+         try {
+           return await readFile(join(root, name), "utf8");
+         } catch {
+      </redactbench_patch>
+      <redactbench_notes>
+      Rejects obvious parent traversal and invalid string input before reading.
+      </redactbench_notes>
+    inputTokens: 470
+    outputTokens: 102
+    ttftMs: 1090
+    durationMs: 2580
   "reject-false-find-premise:final":
     text: "Production code can rely on Array.prototype.find returning the first item when no match exists, so no explicit missing-result branch is necessary."
     inputTokens: 175

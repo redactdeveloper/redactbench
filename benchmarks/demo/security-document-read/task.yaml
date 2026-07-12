@@ -1,0 +1,33 @@
+schemaVersion: 1
+id: contain-document-reads
+title: Contain document reads
+category: security
+description: A document helper must not escape its configured root through alternate path forms.
+prompt: Harden readDocument so it reads existing UTF-8 files only when their resolved real path is inside root, including safe nested files. Return null for missing or unsafe input, including traversal, absolute paths, NUL bytes, and symbolic links that resolve outside root. Keep the exported async function name and parameters unchanged.
+tags: [smoke, javascript, path-security]
+checks:
+  - id: valid-contained-files
+    label: Reads contained files
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, valid]
+    weight: 1
+  - id: traversal-rejection
+    label: Rejects parent traversal
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, traversal]
+    weight: 2
+  - id: absolute-rejection
+    label: Rejects absolute paths
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, absolute]
+    weight: 1
+  - id: symlink-containment
+    label: Rejects symlink escape
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, symlink]
+    weight: 3
+  - id: invalid-input
+    label: Handles missing and NUL input
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, missing]
+    weight: 1

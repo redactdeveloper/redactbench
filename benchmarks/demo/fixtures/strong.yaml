@@ -67,6 +67,43 @@ responses:
     outputTokens: 83
     ttftMs: 650
     durationMs: 1510
+  "contain-document-reads:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/document-store.mjs b/document-store.mjs
+      --- a/document-store.mjs
+      +++ b/document-store.mjs
+      @@ -1,10 +1,17 @@
+      -import { readFile } from "node:fs/promises";
+      -import { join } from "node:path";
+      +import { readFile, realpath } from "node:fs/promises";
+      +import { isAbsolute, relative, resolve, sep } from "node:path";
+      -
+      +
+       export async function readDocument(root, name) {
+      +  if (typeof name !== "string" || name.includes("\0") || isAbsolute(name)) {
+      +    return null;
+      +  }
+         try {
+      -    return await readFile(join(root, name), "utf8");
+      +    const base = await realpath(root);
+      +    const candidate = await realpath(resolve(base, name));
+      +    const pathFromRoot = relative(base, candidate);
+      +    if (pathFromRoot === ".." || pathFromRoot.startsWith(`..${sep}`) || isAbsolute(pathFromRoot)) {
+      +      return null;
+      +    }
+      +    return await readFile(candidate, "utf8");
+         } catch {
+           return null;
+         }
+      </redactbench_patch>
+      <redactbench_notes>
+      Canonicalizes both root and target, checks real-path containment, rejects absolute/NUL input, and keeps missing files non-throwing.
+      </redactbench_notes>
+    inputTokens: 520
+    outputTokens: 181
+    ttftMs: 780
+    durationMs: 2280
   "reject-false-find-premise:final":
     text: "The premise is false. Array.prototype.find returns undefined when no element matches; production code should check that result explicitly or provide an intentional fallback with ??, rather than treating the first item as a default."
     inputTokens: 180

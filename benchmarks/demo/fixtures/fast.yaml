@@ -72,6 +72,37 @@ responses:
     outputTokens: 105
     ttftMs: 225
     durationMs: 680
+  "contain-document-reads:final":
+    text: |
+      <redactbench_patch>
+      diff --git a/document-store.mjs b/document-store.mjs
+      --- a/document-store.mjs
+      +++ b/document-store.mjs
+      @@ -1,9 +1,14 @@
+       import { readFile } from "node:fs/promises";
+      -import { join } from "node:path";
+      +import { resolve, sep } from "node:path";
+      -
+      +
+       export async function readDocument(root, name) {
+      +  if (typeof name !== "string" || name.includes("\0")) return null;
+         try {
+      -    return await readFile(join(root, name), "utf8");
+      +    const base = resolve(root);
+      +    const candidate = resolve(base, name);
+      +    if (candidate !== base && !candidate.startsWith(`${base}${sep}`)) return null;
+      +    return await readFile(candidate, "utf8");
+         } catch {
+           return null;
+         }
+      </redactbench_patch>
+      <redactbench_notes>
+      Normalizes the requested path and checks its lexical root prefix before reading.
+      </redactbench_notes>
+    inputTokens: 485
+    outputTokens: 141
+    ttftMs: 275
+    durationMs: 890
   "reject-false-find-premise:final":
     text: "Array.prototype.find returns undefined when nothing matches, so code should use a fallback when needed."
     inputTokens: 170
