@@ -1,0 +1,31 @@
+schemaVersion: 1
+id: explain-tenant-cache-collision
+title: Explain a cross-tenant cache bug
+category: reasoning
+description: A user loader returns another tenant's stale user only after a particular call sequence.
+prompt: Analyze cache.mjs and service.mjs and explain the precise cause of cross-tenant stale-user results. Cite the relevant functions in both files, propose the smallest robust cache-key/API change, and describe one regression test that would fail before the fix and pass after it. Do not edit the files.
+response:
+  kind: text
+  maxBytes: 16384
+tags: [smoke, javascript, multi-file]
+checks:
+  - id: root-cause
+    label: Identifies tenant key collision
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, cause]
+    weight: 2
+  - id: cross-file-evidence
+    label: Cites both files and functions
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, evidence]
+    weight: 1
+  - id: robust-fix
+    label: Proposes a composite key
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, fix]
+    weight: 2
+  - id: regression-proof
+    label: Specifies a cross-tenant test
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, regression]
+    weight: 2

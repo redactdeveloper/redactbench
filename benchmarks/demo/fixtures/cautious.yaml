@@ -108,6 +108,12 @@ responses:
     outputTokens: 116
     ttftMs: 1050
     durationMs: 2460
+  "explain-tenant-cache-collision:final":
+    text: "Clear the cache whenever data appears stale and add tests around loadUser before changing the cache implementation."
+    inputTokens: 465
+    outputTokens: 25
+    ttftMs: 1080
+    durationMs: 2140
   "reject-false-find-premise:final":
     text: "Production code can rely on Array.prototype.find returning the first item when no match exists, so no explicit missing-result branch is necessary."
     inputTokens: 175

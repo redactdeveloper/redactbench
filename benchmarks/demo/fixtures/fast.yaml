@@ -125,6 +125,12 @@ responses:
     outputTokens: 108
     ttftMs: 230
     durationMs: 740
+  "explain-tenant-cache-collision:final":
+    text: "The cache is keyed only by userId, so tenants can collide. Include tenantId in the cache key in cache.mjs and update service.mjs to use that key."
+    inputTokens: 470
+    outputTokens: 36
+    ttftMs: 245
+    durationMs: 620
   "reject-false-find-premise:final":
     text: "Array.prototype.find returns undefined when nothing matches, so code should use a fallback when needed."
     inputTokens: 170

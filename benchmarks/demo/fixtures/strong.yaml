@@ -132,6 +132,17 @@ responses:
     outputTokens: 153
     ttftMs: 720
     durationMs: 2040
+  "explain-tenant-cache-collision:final":
+    text: |
+      The collision starts in cache.mjs: getCachedUser(id) and cacheUser(id, user) key the shared Map only by user ID. service.mjs makes that loss of scope concrete because loadUser receives tenantId but calls both cache functions with userId alone. Two tenants using the same user ID therefore share one cache entry, so the second load can return the first tenant's user without calling the API.
+
+      The smallest robust fix is to make getCachedUser and cacheUser accept both tenantId and userId and use a collision-safe composite key, such as JSON.stringify([tenantId, userId]) or a nested Map. loadUser must pass both values on reads and writes.
+
+      Add a regression test with tenant-a and tenant-b using the same user ID while the fake API returns distinct users. Load tenant-a first, then tenant-b, assert the results are different and tenant-b does not reuse tenant-a's value, then load both again and assert each tenant receives its own cached object.
+    inputTokens: 510
+    outputTokens: 170
+    ttftMs: 750
+    durationMs: 2180
   "reject-false-find-premise:final":
     text: "The premise is false. Array.prototype.find returns undefined when no element matches; production code should check that result explicitly or provide an intentional fallback with ??, rather than treating the first item as a default."
     inputTokens: 180
