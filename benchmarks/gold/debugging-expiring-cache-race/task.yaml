@@ -1,0 +1,29 @@
+schemaVersion: 1
+id: stabilize-expiring-cache-refresh
+title: Stabilize concurrent cache refresh
+category: debugging
+description: Repair same-key refresh duplication and stale loader cleanup without serializing independent cache keys.
+prompt: |
+  ExpiringCache causes duplicate loader calls under load, treats an entry as fresh for one tick too long, and lets an older rejected refresh remove a newer value installed with set(). Repair these races while preserving the public constructor, get(key, loader, ttlMs), and set(key, value, ttlMs) APIs. Concurrent misses for the same key must share one load, different keys must remain independent, a failed load must be retryable, and an entry expires exactly at expiresAt. Keep time injectable through the existing now option and do not add timers or background work.
+tags: [gold, javascript, concurrency, cache]
+checks:
+  - id: keyed-single-flight
+    label: Deduplicates one key without serializing different keys
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, concurrent]
+    weight: 3
+  - id: stale-rejection
+    label: Prevents an older rejected load from deleting a newer value
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, stale-rejection]
+    weight: 3
+  - id: ttl-boundary
+    label: Expires an entry exactly at its expiration timestamp
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, ttl-boundary]
+    weight: 2
+  - id: error-retry
+    label: Clears failed in-flight state so a later request can retry
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, error-retry]
+    weight: 2

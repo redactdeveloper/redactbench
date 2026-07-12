@@ -7,3 +7,5 @@ scorerVersion: 3.0.0-dev
 tasks:
   - manifest: debugging-crash-safe-checkpoint/task.yaml
     weight: 1
+  - manifest: debugging-expiring-cache-race/task.yaml
+    weight: 1
