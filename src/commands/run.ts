@@ -43,6 +43,12 @@ function requireProviderCredentials(
     if (model.provider === "fixture") {
       continue;
     }
+    if ("execution" in model) {
+      throw new RedactBenchError(
+        "CONFIG_INVALID",
+        `Docker harness model ${model.id} must be run with redactbench start`
+      );
+    }
     const keyName = requirements[model.provider];
     if (!env[keyName]) {
       throw new RedactBenchError(

@@ -4,8 +4,10 @@ export interface GenerationRequest {
   fixtureResponseKey?: string;
   maxOutputTokens: number;
   prompt: string;
+  requestId?: string;
   system: string;
   temperature?: number;
+  workspaceDirectory?: string;
 }
 
 export interface ProviderUsage {
@@ -20,7 +22,7 @@ export interface ProviderTiming {
   generationMs: number;
   outputTokensPerSecond: number | null;
   startedAt: string;
-  ttftMs: number;
+  ttftMs: number | null;
 }
 
 export interface ProviderResult {
@@ -35,6 +37,7 @@ export interface ProviderResult {
 export interface ProviderAdapter {
   readonly model: string;
   readonly provider: ProviderName;
+  readonly workspaceMode?: boolean;
   generate(request: GenerationRequest): Promise<ProviderResult>;
 }
 

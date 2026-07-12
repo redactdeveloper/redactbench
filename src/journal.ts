@@ -92,7 +92,7 @@ const ProviderResultSchema = z
         generationMs: z.number().finite().nonnegative(),
         outputTokensPerSecond: z.number().finite().nonnegative().nullable(),
         startedAt: DateTimeSchema,
-        ttftMs: z.number().finite().nonnegative()
+        ttftMs: z.number().finite().nonnegative().nullable()
       })
       .strict(),
     usage: z

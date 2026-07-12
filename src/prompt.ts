@@ -211,7 +211,24 @@ export async function snapshotWorkspace(
   };
 }
 
-function responseContract(task: Task): string {
+function responseContract(
+  task: Task,
+  responseMode: "envelope" | "workspace"
+): string {
+  if (responseMode === "workspace") {
+    return task.response.kind === "text"
+      ? [
+          "Do not modify repository files for this reasoning task.",
+          "Return only the final answer as plain text with the requested evidence."
+        ].join("\n")
+      : [
+          "Inspect and edit the mounted repository directly.",
+          "Run useful local checks when available, but never claim hidden checks passed.",
+          "In the final message, concisely state what changed and what you verified.",
+          "Do not print a patch envelope; filesystem changes are the submitted solution."
+        ].join("\n");
+  }
+
   if (task.response.kind === "text") {
     return [
       "Return only the final answer as plain text.",
@@ -231,7 +248,11 @@ function responseContract(task: Task): string {
   ].join("\n");
 }
 
-export function buildTaskPrompt(task: Task, snapshot: WorkspaceSnapshot): string {
+export function buildTaskPrompt(
+  task: Task,
+  snapshot: WorkspaceSnapshot,
+  responseMode: "envelope" | "workspace" = "envelope"
+): string {
   return [
     `Task: ${task.title}`,
     `Category: ${task.category}`,
@@ -245,6 +266,6 @@ export function buildTaskPrompt(task: Task, snapshot: WorkspaceSnapshot): string
     snapshot.text,
     "",
     "Response contract:",
-    responseContract(task)
+    responseContract(task, responseMode)
   ].join("\n");
 }

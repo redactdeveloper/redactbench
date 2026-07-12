@@ -109,3 +109,26 @@ export async function recoveryGitSummary(workspaceDirectory: string): Promise<st
     status.stdout.trim() || "clean"
   ].join("\n");
 }
+
+export async function recoveryGitDiff(workspaceDirectory: string): Promise<string> {
+  await runGit(workspaceDirectory, [
+    "add",
+    "--intent-to-add",
+    "-A",
+    "--",
+    ".",
+    ":(exclude).git",
+    ":(exclude).redactbench"
+  ]);
+  return (
+    await runGit(workspaceDirectory, [
+      "diff",
+      "--binary",
+      "--no-ext-diff",
+      "--",
+      ".",
+      ":(exclude).git",
+      ":(exclude).redactbench"
+    ])
+  ).stdout;
+}

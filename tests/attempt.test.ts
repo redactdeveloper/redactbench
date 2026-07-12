@@ -99,6 +99,86 @@ const model = {
 } satisfies Extract<ModelConfig, { provider: "openai" }>;
 
 describe("runAttempt", () => {
+  it("evaluates edits made directly by a Docker workspace harness", async () => {
+    const fixture = await taskDirectory();
+    const adapter: ProviderAdapter = {
+      model: "workspace-model",
+      provider: "openrouter",
+      workspaceMode: true,
+      async generate(request) {
+        expect(request.workspaceDirectory).toBeTruthy();
+        await writeFile(
+          join(request.workspaceDirectory!, "users.mjs"),
+          [
+            "export function getUser(users, id) {",
+            "  return users.find((user) => user.id === id);",
+            "}"
+          ].join("\n") + "\n"
+        );
+        return {
+          model: "workspace-model",
+          provider: "openrouter",
+          providerRequestId: null,
+          text: "Changed the lookup and checked the implementation.",
+          timing: {
+            completedAt: "2026-07-12T00:00:01.000Z",
+            durationMs: 1_000,
+            generationMs: 1_000,
+            outputTokensPerSecond: null,
+            startedAt: "2026-07-12T00:00:00.000Z",
+            ttftMs: null
+          },
+          usage: null
+        };
+      }
+    };
+    const sandbox: SandboxRunner = vi.fn(async (_check, context) => {
+      expect(await readFile(join(context.workspaceDirectory, "users.mjs"), "utf8"))
+        .toContain("users.find");
+      expect(await readFile(
+        join(context.workspaceDirectory, ".redactbench", "response.txt"),
+        "utf8"
+      )).toContain("Changed the lookup");
+      return {
+        durationMs: 20,
+        exitCode: 0,
+        imageId: "sha256:test-image",
+        output: "passed",
+        outputLimitExceeded: false,
+        timedOut: false
+      };
+    });
+    const harnessModel = {
+      execution: "docker-harness",
+      harness: "opencode",
+      id: "hy3-high-opencode",
+      label: "Hy3 High",
+      maxOutputTokens: 8_192,
+      model: "openrouter/tencent/hy3",
+      provider: "openrouter"
+    } satisfies ModelConfig;
+
+    const result = await runAttempt({
+      adapter,
+      attemptId: "run:debug-get-user:hy3-high-opencode:1",
+      model: harnessModel,
+      repeat: 1,
+      sandbox,
+      task: fixture.task,
+      taskDirectory: fixture.root
+    });
+
+    expect(result.report).toMatchObject({
+      provider: "openrouter",
+      score: 1,
+      status: "passed"
+    });
+    expect(result.artifacts.patchHash).toMatch(/^[a-f0-9]{64}$/u);
+    expect(result.artifacts.notes).toContain("Changed the lookup");
+    expect(await readFile(join(fixture.root, "workspace", "users.mjs"), "utf8"))
+      .toContain("users[id]");
+  });
+
   it("applies a validated patch only to a temporary workspace and evaluates it", async () => {
     const fixture = await taskDirectory();
     let temporaryWorkspace = "";

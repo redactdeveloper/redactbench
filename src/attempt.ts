@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
@@ -145,13 +146,26 @@ export async function runAttempt(input: RunAttemptInput): Promise<AttemptOutcome
     ]);
     const snapshot = await snapshotWorkspace(workspaceDirectory);
     artifacts.promptHash = snapshot.hash;
-    const prompt = buildTaskPrompt(input.task, snapshot);
+    const workspaceMode = input.adapter.workspaceMode === true;
+    const prompt = buildTaskPrompt(
+      input.task,
+      snapshot,
+      workspaceMode ? "workspace" : "envelope"
+    );
+
+    if (workspaceMode) {
+      isolatedWorkspace = await createIsolatedWorkspace(workspaceDirectory);
+    }
 
     providerResult = await input.adapter.generate({
       fixtureResponseKey: `${input.task.id}:final`,
       maxOutputTokens: input.model.maxOutputTokens,
       prompt,
+      requestId: `${input.attemptId}:final`,
       system: SYSTEM_PROMPT,
+      ...(isolatedWorkspace
+        ? { workspaceDirectory: isolatedWorkspace.directory }
+        : {}),
       ...(input.model.temperature === undefined
         ? {}
         : { temperature: input.model.temperature })
@@ -163,17 +177,37 @@ export async function runAttempt(input: RunAttemptInput): Promise<AttemptOutcome
       );
     }
 
-    const parsed = parseModelResponse(providerResult.text, input.task.response);
-    artifacts.responseHash = parsed.rawHash;
-    isolatedWorkspace = await createIsolatedWorkspace(workspaceDirectory);
-
     let evaluatorResponse: string;
-    if (parsed.kind === "patch") {
-      artifacts.patchHash = await applyPatch(isolatedWorkspace.directory, parsed.patch);
-      artifacts.notes = parsed.notes;
-      evaluatorResponse = parsed.notes;
+    if (workspaceMode) {
+      if (!isolatedWorkspace) {
+        throw new RedactBenchError(
+          "ATTEMPT_ERROR",
+          "workspace harness did not receive an isolated workspace"
+        );
+      }
+      artifacts.responseHash = createHash("sha256")
+        .update(providerResult.text)
+        .digest("hex");
+      const modified = await snapshotWorkspace(isolatedWorkspace.directory);
+      artifacts.patchHash =
+        modified.hash === snapshot.hash
+          ? null
+          : createHash("sha256")
+              .update(`${snapshot.hash}:${modified.hash}`)
+              .digest("hex");
+      artifacts.notes = providerResult.text;
+      evaluatorResponse = providerResult.text;
     } else {
-      evaluatorResponse = parsed.answer;
+      const parsed = parseModelResponse(providerResult.text, input.task.response);
+      artifacts.responseHash = parsed.rawHash;
+      isolatedWorkspace = await createIsolatedWorkspace(workspaceDirectory);
+      if (parsed.kind === "patch") {
+        artifacts.patchHash = await applyPatch(isolatedWorkspace.directory, parsed.patch);
+        artifacts.notes = parsed.notes;
+        evaluatorResponse = parsed.notes;
+      } else {
+        evaluatorResponse = parsed.answer;
+      }
     }
     await writeFile(
       resolve(isolatedWorkspace.directory, ".redactbench", "response.txt"),

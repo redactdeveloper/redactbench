@@ -16,6 +16,7 @@ import {
   commitRecoveryPhase,
   currentRecoveryCommit,
   initializeRecoveryGit,
+  recoveryGitDiff,
   recoveryGitSummary
 } from "./git-state.js";
 import { applyPatch } from "./patch.js";
@@ -122,10 +123,11 @@ function aggregateCost(
     : (costs as number[]).reduce((sum, cost) => sum + cost, 0);
 }
 
-function average(values: readonly number[]): number | null {
-  return values.length === 0
+function average(values: readonly (number | null)[]): number | null {
+  const measured = values.filter((value): value is number => value !== null);
+  return measured.length === 0
     ? null
-    : values.reduce((sum, value) => sum + value, 0) / values.length;
+    : measured.reduce((sum, value) => sum + value, 0) / measured.length;
 }
 
 export interface RecoveryPhase1State {
@@ -154,6 +156,33 @@ class Phase1CheckpointError extends Error {
   constructor(readonly original: unknown) {
     super("phase 1 checkpoint callback failed");
   }
+}
+
+function workspaceResponseText(text: string, phase: 1 | 2): string {
+  const notes = text.trim();
+  if (notes.length === 0 || notes.length > 32_768) {
+    throw new RedactBenchError(
+      "PROVIDER_ERROR",
+      `workspace harness phase ${phase} returned invalid final notes`
+    );
+  }
+  return notes;
+}
+
+function workspacePatch(patch: string, phase: 1 | 2): {
+  patch: string;
+  patchHash: string;
+} {
+  if (!patch.trim()) {
+    throw new RedactBenchError(
+      "PATCH_REJECTED",
+      `workspace harness phase ${phase} made no repository changes`
+    );
+  }
+  return {
+    patch,
+    patchHash: createHash("sha256").update(patch).digest("hex")
+  };
 }
 
 export async function runContextRecoveryAttempt(
@@ -194,6 +223,7 @@ export async function runContextRecoveryAttempt(
     let phase1ResponseHash: string;
     let phase1ProviderResult: ProviderResult;
     let afterPhase1: WorkspaceSnapshot;
+    const workspaceMode = input.adapter.workspaceMode === true;
 
     if (input.phase1State) {
       workspace = await createIsolatedWorkspace(input.phase1State.checkpointDirectory);
@@ -234,8 +264,14 @@ export async function runContextRecoveryAttempt(
       phase1ProviderResult = await input.adapter.generate({
         fixtureResponseKey: `${input.task.id}:phase1`,
         maxOutputTokens: input.task.contextRecovery.maxPhase1OutputTokens,
-        prompt: buildTaskPrompt(phase1Task, initialSnapshot),
+        prompt: buildTaskPrompt(
+          phase1Task,
+          initialSnapshot,
+          workspaceMode ? "workspace" : "envelope"
+        ),
+        requestId: `${input.attemptId}:phase1`,
         system: RECOVERY_SYSTEM_PROMPT,
+        ...(workspaceMode ? { workspaceDirectory: workspace.directory } : {}),
         ...(input.model.temperature === undefined
           ? {}
           : { temperature: input.model.temperature })
@@ -246,17 +282,30 @@ export async function runContextRecoveryAttempt(
           "phase 1 provider identity mismatch"
         );
       }
-      const parsedPhase1 = parseModelResponse(
-        phase1ProviderResult.text,
-        input.task.response
-      );
-      if (parsedPhase1.kind !== "patch") {
-        throw new RedactBenchError("PATCH_REJECTED", "phase 1 must return a patch");
+      if (workspaceMode) {
+        phase1Notes = workspaceResponseText(phase1ProviderResult.text, 1);
+        phase1ResponseHash = createHash("sha256")
+          .update(phase1ProviderResult.text)
+          .digest("hex");
+        const workspaceChange = workspacePatch(
+          await recoveryGitDiff(workspace.directory),
+          1
+        );
+        phase1Patch = workspaceChange.patch;
+        phase1PatchHash = workspaceChange.patchHash;
+      } else {
+        const parsedPhase1 = parseModelResponse(
+          phase1ProviderResult.text,
+          input.task.response
+        );
+        if (parsedPhase1.kind !== "patch") {
+          throw new RedactBenchError("PATCH_REJECTED", "phase 1 must return a patch");
+        }
+        phase1Notes = parsedPhase1.notes;
+        phase1Patch = parsedPhase1.patch;
+        phase1ResponseHash = parsedPhase1.rawHash;
+        phase1PatchHash = await applyPatch(workspace.directory, phase1Patch);
       }
-      phase1Notes = parsedPhase1.notes;
-      phase1Patch = parsedPhase1.patch;
-      phase1ResponseHash = parsedPhase1.rawHash;
-      phase1PatchHash = await applyPatch(workspace.directory, phase1Patch);
       const commitSha = await commitRecoveryPhase(workspace.directory, 1);
       afterPhase1 = await snapshotWorkspace(workspace.directory);
 
@@ -305,8 +354,14 @@ export async function runContextRecoveryAttempt(
     const phase2Result = await input.adapter.generate({
       fixtureResponseKey: `${input.task.id}:phase2`,
       maxOutputTokens: input.model.maxOutputTokens,
-      prompt: buildTaskPrompt(phase2Task, afterPhase1),
+      prompt: buildTaskPrompt(
+        phase2Task,
+        afterPhase1,
+        workspaceMode ? "workspace" : "envelope"
+      ),
+      requestId: `${input.attemptId}:phase2`,
       system: RECOVERY_SYSTEM_PROMPT,
+      ...(workspaceMode ? { workspaceDirectory: workspace.directory } : {}),
       ...(input.model.temperature === undefined
         ? {}
         : { temperature: input.model.temperature })
@@ -315,27 +370,47 @@ export async function runContextRecoveryAttempt(
       throw new RedactBenchError("PROVIDER_ERROR", "phase 2 provider identity mismatch");
     }
     providerResults.push(phase2Result);
-    const phase2 = parseModelResponse(phase2Result.text, input.task.response);
-    if (phase2.kind !== "patch") {
-      throw new RedactBenchError("PATCH_REJECTED", "phase 2 must return a patch");
+    let phase2Notes: string;
+    let phase2Patch: string;
+    let phase2PatchHash: string;
+    let phase2ResponseHash: string;
+    if (workspaceMode) {
+      phase2Notes = workspaceResponseText(phase2Result.text, 2);
+      phase2ResponseHash = createHash("sha256")
+        .update(phase2Result.text)
+        .digest("hex");
+      const workspaceChange = workspacePatch(
+        await recoveryGitDiff(workspace.directory),
+        2
+      );
+      phase2Patch = workspaceChange.patch;
+      phase2PatchHash = workspaceChange.patchHash;
+    } else {
+      const phase2 = parseModelResponse(phase2Result.text, input.task.response);
+      if (phase2.kind !== "patch") {
+        throw new RedactBenchError("PATCH_REJECTED", "phase 2 must return a patch");
+      }
+      phase2Notes = phase2.notes;
+      phase2Patch = phase2.patch;
+      phase2ResponseHash = phase2.rawHash;
+      phase2PatchHash = await applyPatch(workspace.directory, phase2.patch);
     }
-    artifacts.phase2ResponseHash = phase2.rawHash;
-    const phase2PatchHash = await applyPatch(workspace.directory, phase2.patch);
+    artifacts.phase2ResponseHash = phase2ResponseHash;
     await commitRecoveryPhase(workspace.directory, 2);
     const finalSnapshot = await snapshotWorkspace(workspace.directory);
     const behavior = recoveryMetrics(
       phase1Patch,
-      phase2.patch,
+      phase2Patch,
       afterPhase1,
       finalSnapshot
     );
 
-    artifacts.notes = `Phase 1:\n${phase1Notes}\n\nPhase 2:\n${phase2.notes}`;
+    artifacts.notes = `Phase 1:\n${phase1Notes}\n\nPhase 2:\n${phase2Notes}`;
     artifacts.patchHash = createHash("sha256")
       .update(`${phase1PatchHash}:${phase2PatchHash}`)
       .digest("hex");
     artifacts.responseHash = createHash("sha256")
-      .update(`${phase1ResponseHash}:${phase2.rawHash}`)
+      .update(`${phase1ResponseHash}:${phase2ResponseHash}`)
       .digest("hex");
     await writeFile(
       resolve(workspace.directory, ".redactbench", "response.txt"),

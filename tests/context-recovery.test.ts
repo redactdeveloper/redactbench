@@ -117,6 +117,102 @@ const model = {
 } satisfies Extract<ModelConfig, { provider: "openai" }>;
 
 describe("runContextRecoveryAttempt", () => {
+  it("uses two fresh workspace-harness calls and preserves phase-one edits", async () => {
+    const testFixture = await fixture();
+    const requests: GenerationRequest[] = [];
+    const workspaceModel = {
+      execution: "docker-harness",
+      harness: "opencode",
+      id: "hy3-high-opencode",
+      label: "Hy3 High",
+      maxOutputTokens: 8_192,
+      model: "openrouter/tencent/hy3",
+      provider: "openrouter"
+    } satisfies ModelConfig;
+    const adapter: ProviderAdapter = {
+      model: workspaceModel.model,
+      provider: "openrouter",
+      workspaceMode: true,
+      async generate(request) {
+        requests.push(request);
+        const workspace = request.workspaceDirectory!;
+        if (requests.length === 1) {
+          await writeFile(
+            join(workspace, "parser.mjs"),
+            "export const parsePort = (value) => Number.parseInt(value, 10);\n"
+          );
+          return {
+            ...providerResult("Parser change is complete; formatter remains.", 1),
+            model: workspaceModel.model,
+            provider: "openrouter"
+          };
+        }
+        expect(await readFile(join(workspace, "parser.mjs"), "utf8"))
+          .toContain("Number.parseInt");
+        await writeFile(
+          join(workspace, "format.mjs"),
+          [
+            "export const formatPort = (port) => {",
+            "  if (!Number.isInteger(port) || port < 1 || port > 65535) return null;",
+            "  return String(port);",
+            "};"
+          ].join("\n") + "\n"
+        );
+        return {
+          ...providerResult("Recovered phase one and finished the formatter.", 2),
+          model: workspaceModel.model,
+          provider: "openrouter"
+        };
+      }
+    };
+    const sandbox: SandboxRunner = vi.fn(async (_check, context) => {
+      expect(await readFile(join(context.workspaceDirectory, "parser.mjs"), "utf8"))
+        .toContain("Number.parseInt");
+      expect(await readFile(join(context.workspaceDirectory, "format.mjs"), "utf8"))
+        .toContain("65535");
+      return {
+        durationMs: 20,
+        exitCode: 0,
+        imageId: "sha256:recovery-image",
+        output: "passed",
+        outputLimitExceeded: false,
+        timedOut: false
+      };
+    });
+
+    const result = await runContextRecoveryAttempt({
+      adapter,
+      attemptId: "run:recover-port-utils:hy3-high-opencode:1",
+      model: workspaceModel,
+      repeat: 1,
+      sandbox,
+      task: testFixture.task,
+      taskDirectory: testFixture.root
+    });
+
+    expect(requests).toHaveLength(2);
+    expect(requests[0]?.requestId).toMatch(/phase1$/u);
+    expect(requests[1]?.requestId).toMatch(/phase2$/u);
+    expect(requests[0]?.workspaceDirectory).toBe(requests[1]?.workspaceDirectory);
+    expect(requests[1]?.prompt).toContain("Parser change is complete");
+    expect(requests[1]?.prompt).toContain("Number.parseInt");
+    expect(requests[1]?.prompt).not.toContain("<redactbench_patch>");
+    expect(result.report).toMatchObject({
+      provider: "openrouter",
+      score: 1,
+      status: "passed",
+      contextRecovery: {
+        duplicateEdits: 0,
+        notesPreserved: true,
+        rollbackDetected: false
+      }
+    });
+    expect(result.artifacts.phase1ResponseHash).toMatch(/^[a-f0-9]{64}$/u);
+    expect(result.artifacts.phase2ResponseHash).toMatch(/^[a-f0-9]{64}$/u);
+    expect(await readFile(join(testFixture.root, "workspace", "parser.mjs"), "utf8"))
+      .toContain("Number(value)");
+  });
+
   it("performs two independent calls and recovers from repo, git and notes", async () => {
     const testFixture = await fixture();
     const requests: GenerationRequest[] = [];

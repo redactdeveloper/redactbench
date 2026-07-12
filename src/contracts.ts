@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { FieldProviderSchema, HarnessNameSchema } from "./field-contracts.js";
 import { SCHEMA_VERSION } from "./version.js";
 
 const MAX_CONFIG_TEXT = 32_768;
@@ -22,7 +23,11 @@ export const ProviderNameSchema = z.enum([
   "fixture",
   "openai",
   "anthropic",
-  "google"
+  "google",
+  "xai",
+  "cursor",
+  "zai",
+  "openrouter"
 ]);
 
 const SlugSchema = z
@@ -237,11 +242,21 @@ const GoogleModelSchema = z
   })
   .strict();
 
-export const ModelSchema = z.discriminatedUnion("provider", [
+const HarnessModelSchema = z
+  .object({
+    ...ModelBaseShape,
+    provider: FieldProviderSchema,
+    execution: z.literal("docker-harness"),
+    harness: HarnessNameSchema
+  })
+  .strict();
+
+export const ModelSchema = z.union([
   FixtureModelSchema,
   OpenAiModelSchema,
   AnthropicModelSchema,
-  GoogleModelSchema
+  GoogleModelSchema,
+  HarnessModelSchema
 ]);
 
 export const ModelConfigFileSchema = z

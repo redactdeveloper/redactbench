@@ -489,10 +489,10 @@
 
 - [ ] Codex, Grok, Cursor, AGY и OpenCode имеют отдельные container adapters.
 - [x] Все 11 entrants привязаны к проверенным CLI model IDs/variants и отдельным Docker runtime definitions.
-- [ ] Context Recovery создаёт новый container для phase 2.
+- [x] Context Recovery создаёт новый container для phase 2 и передаёт только checkpoint workspace/Git/notes.
 - [ ] Первый платный run требует budget confirmation и точных model identifiers.
 
-**Проверка:** binding/runtime contracts — 17 passed, включая real Docker dry-run; далее per-adapter dry-run и opt-in live smoke.
+**Проверка:** binding/runtime contracts — 17 passed, включая real Docker dry-run; workspace adapter + Context Recovery contracts — 11 passed; далее per-CLI image dry-run и opt-in live smoke.
 
 ## Задача 29: Добавить `redactbench start`
 
