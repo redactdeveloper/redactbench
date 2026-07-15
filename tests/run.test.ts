@@ -88,6 +88,7 @@ describe("runBenchmark", () => {
           .toContain('"type":"attempt.completed"');
       }
     });
+    const firstReports = vi.fn();
     const resumedProgress = vi.fn();
     const common = {
       executeAttempt,
@@ -100,13 +101,22 @@ describe("runBenchmark", () => {
       suiteDirectory: directory
     };
 
-    const first = await runBenchmark({ ...common, onProgress: firstProgress });
+    const first = await runBenchmark({ ...common, onProgress: firstProgress, onReport: firstReports });
     const resumed = await runBenchmark({ ...common, onProgress: resumedProgress });
 
     expect(executeAttempt).toHaveBeenCalledOnce();
     expect(first.attempts).toHaveLength(1);
     expect(resumed.attempts).toHaveLength(1);
     expect(resumed.leaderboard[0]?.score).toBe(1);
+    expect(firstReports.mock.calls.map(([snapshot]) => ({
+      attempts: snapshot.attempts.length,
+      completedAt: snapshot.run.completedAt === null ? null : "set",
+      score: snapshot.leaderboard[0]?.score
+    }))).toEqual([
+      { attempts: 0, completedAt: null, score: 0 },
+      { attempts: 1, completedAt: null, score: 1 },
+      { attempts: 1, completedAt: "set", score: 1 }
+    ]);
     expect(firstProgress.mock.calls.map(([event]) => event)).toEqual([
       {
         completedAttempts: 0,

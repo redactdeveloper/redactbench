@@ -201,6 +201,35 @@ export function aggregateJournal(
     completed?.payload.type === "run.completed"
       ? completed.payload.completedAt
       : null;
+  const providerFailureCount = attempts.filter(
+    (attempt) => attempt.status === "error" && attempt.error?.code === "PROVIDER_ERROR"
+  ).length;
+  const modelOutputFailureCount = attempts.filter(
+    (attempt) => attempt.status === "error" && attempt.error?.code === "PATCH_REJECTED"
+  ).length;
+  const attemptInfrastructureFailureCount = attempts.filter(
+    (attempt) =>
+      attempt.status === "error" &&
+      attempt.error?.code !== "PROVIDER_ERROR" &&
+      attempt.error?.code !== "PATCH_REJECTED"
+  ).length;
+  const infrastructureCheckCodes = new Set([
+    "DOCKER_ERROR",
+    "DOCKER_UNAVAILABLE",
+    "SANDBOX_ERROR"
+  ]);
+  const checkInfrastructureFailureCount = attempts.reduce(
+    (total, attempt) =>
+      total + attempt.checks.filter(
+        (check) =>
+          check.status === "error" &&
+          check.errorCode !== undefined &&
+          infrastructureCheckCodes.has(check.errorCode)
+      ).length,
+    0
+  );
+  const infrastructureFailureCount =
+    attemptInfrastructureFailureCount + checkInfrastructureFailureCount;
   return ReportSchema.parse({
     schemaVersion: 1,
     scorerVersion: started.run.scorerVersion,
@@ -218,6 +247,12 @@ export function aggregateJournal(
     },
     leaderboard,
     attempts,
+    validity: {
+      infrastructureFailureCount,
+      modelOutputFailureCount,
+      providerFailureCount,
+      validForRanking: providerFailureCount === 0 && infrastructureFailureCount === 0
+    },
     journalVerified: true,
     sandbox: {
       imageIds: [...imageIds].sort(),

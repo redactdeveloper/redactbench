@@ -1,0 +1,1 @@
+Implemented ticket normalization with validation, whitespace cleanup, and no input mutation.

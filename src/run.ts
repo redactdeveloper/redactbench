@@ -27,6 +27,7 @@ import {
 } from "./journal.js";
 import { createProviderAdapter, type ProviderAdapter } from "./providers/index.js";
 import type { SandboxRunner } from "./sandbox/docker.js";
+import { scheduleAttemptJobs, type SchedulableAttemptJob } from "./schedule.js";
 import { stableStringify } from "./stable-json.js";
 import { resolveContainedPath, resolveContainedRealPath } from "./workspace.js";
 
@@ -76,6 +77,7 @@ export interface RunBenchmarkInput {
   models: ModelConfigFile;
   now?: () => number;
   onProgress?: (event: RunProgressEvent) => Promise<void> | void;
+  onReport?: (report: Report) => Promise<void> | void;
   repeatCount: number;
   runId: string;
   sandbox?: SandboxRunner;
@@ -132,29 +134,9 @@ function configurationHash(
     .digest("hex");
 }
 
-interface AttemptJob {
+interface AttemptJob extends SchedulableAttemptJob {
   bundle: TaskBundle;
   model: ModelConfig;
-  repeat: number;
-}
-
-function shuffledJobs(jobs: AttemptJob[], seed: number | undefined): AttemptJob[] {
-  if (seed === undefined) {
-    return jobs;
-  }
-  let state = seed >>> 0;
-  const random = () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let value = state;
-    value = Math.imul(value ^ (value >>> 15), value | 1);
-    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-    return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296;
-  };
-  for (let index = jobs.length - 1; index > 0; index -= 1) {
-    const other = Math.floor(random() * (index + 1));
-    [jobs[index], jobs[other]] = [jobs[other]!, jobs[index]!];
-  }
-  return jobs;
 }
 
 export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
@@ -276,6 +258,12 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
     });
     return progressQueue;
   };
+  const emitReport = async (): Promise<Report> => {
+    const report = aggregateJournal(journal.entries, new Date(now()).toISOString());
+    await input.onReport?.(report);
+    return report;
+  };
+  await emitReport();
   await emitProgress({
     completedAttempts,
     remainingAttempts: totalAttempts - completedAttempts,
@@ -352,18 +340,25 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
         fixtureBaseDirectory: resolve(input.modelConfigDirectory)
       }));
   const adapters = new Map<string, ProviderAdapter>();
-  const jobs: AttemptJob[] = [];
+  const allJobs: AttemptJob[] = [];
   for (const bundle of tasks) {
     for (const model of input.models.models) {
       for (let repeat = 1; repeat <= input.repeatCount; repeat += 1) {
-        const attemptId = `${input.runId}:${bundle.task.id}:${model.id}:${repeat}`;
-        if (!completed.has(attemptId)) {
-          jobs.push({ bundle, model, repeat });
-        }
+        allJobs.push({
+          bundle,
+          model,
+          modelId: model.id,
+          repeat,
+          taskId: bundle.task.id
+        });
       }
     }
   }
-  shuffledJobs(jobs, input.seed);
+  const jobs = scheduleAttemptJobs(
+    allJobs,
+    input.seed,
+    (job) => completed.has(`${input.runId}:${job.taskId}:${job.modelId}:${job.repeat}`)
+  );
   let nextJob = 0;
 
   const worker = async () => {
@@ -402,6 +397,7 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
         report: outcome.report,
         taskWeight: bundle.weight
       });
+      await emitReport();
       completed.add(attemptId);
       completedAttempts += 1;
       await emitProgress({
@@ -435,6 +431,8 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
     });
   }
 
+  const report = await emitReport();
+
   await emitProgress({
     completedAttempts,
     runId: input.runId,
@@ -442,5 +440,5 @@ export async function runBenchmark(input: RunBenchmarkInput): Promise<Report> {
     type: "run.completed"
   });
 
-  return aggregateJournal(journal.entries, new Date(now()).toISOString());
+  return report;
 }

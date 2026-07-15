@@ -84,11 +84,18 @@ describe("harness credential readiness", () => {
       writeFile(paths.openrouter, "openrouter-credential-value", { mode: 0o600 }),
       writeFile(paths.zai, "zai-credential-value", { mode: 0o600 })
     ]);
-    await writeFile(
-      join(paths.agy, "antigravity-cli", "antigravity-oauth-token"),
-      "agy-credential-value",
-      { mode: 0o600 }
-    );
+    await Promise.all([
+      mkdir(join(paths.agy, "antigravity-cli", "cache"), { recursive: true }),
+      mkdir(join(paths.agy, "config", "projects"), { recursive: true })
+    ]);
+    await Promise.all([
+      writeFile(join(paths.agy, "antigravity-cli", "antigravity-oauth-token"), "agy-credential-value", { mode: 0o600 }),
+      writeFile(join(paths.agy, "antigravity-cli", "cache", "default_project_id.txt"), "project-id", { mode: 0o600 }),
+      writeFile(join(paths.agy, "antigravity-cli", "cache", "onboarding.json"), "{}", { mode: 0o600 }),
+      writeFile(join(paths.agy, "antigravity-cli", "installation_id"), "installation-id", { mode: 0o600 }),
+      writeFile(join(paths.agy, "config", "config.json"), "{}", { mode: 0o600 }),
+      writeFile(join(paths.agy, "config", "projects", "default-cli-project.json"), "{}", { mode: 0o600 })
+    ]);
 
     const readiness = await inspectHarnessCredentials(await targetCatalog(), {
       REDACTBENCH_AGY_PROFILE: paths.agy,

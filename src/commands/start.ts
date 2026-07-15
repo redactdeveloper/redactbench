@@ -201,7 +201,7 @@ export function formatRunProgress(event: RunProgressEvent): string {
 
 function table(report: Report): string {
   const rows = report.leaderboard.map((entry, index) => [
-    String(index + 1),
+    report.validity.validForRanking ? String(index + 1) : "—",
     terminalText(entry.label),
     `${(entry.score * 100).toFixed(1)}%`,
     metric(entry.metrics.avgTtftMs === null ? null : entry.metrics.avgTtftMs / 1_000, "s"),
@@ -256,6 +256,11 @@ export function formatStartResult(result: StartCommandResult): string {
   return [
     `RedactBench run complete: ${summary}`,
     generationBudget,
+    ...(!result.report.validity.validForRanking
+      ? [
+          `Ranking withheld · Provider failures: ${result.report.validity.providerFailureCount} · Infrastructure failures: ${result.report.validity.infrastructureFailureCount}`
+        ]
+      : []),
     "",
     table(result.report),
     "",
@@ -374,6 +379,28 @@ export async function startCommand(
       })
     });
     const benchmark = dependencies.runBenchmark ?? runBenchmark;
+    const packageReport = dependencies.packageReport ?? reportCommand;
+    const reportDirectory = resolve(runDirectory, "report");
+    let packaged: Awaited<ReturnType<typeof reportCommand>> | undefined;
+    const publishReport = async (snapshot: Report) => {
+      packaged ??= await packageReport(
+        journalFile,
+        reportDirectory,
+        snapshot.generatedAt
+      );
+      await Promise.all([
+        writeFile(
+          resolve(runDirectory, "run.json"),
+          `${JSON.stringify(snapshot, null, 2)}\n`,
+          { mode: 0o600 }
+        ),
+        writeFile(
+          resolve(reportDirectory, "report.json"),
+          `${JSON.stringify(snapshot, null, 2)}\n`,
+          { mode: 0o600 }
+        )
+      ]);
+    };
     const report = await benchmark({
       concurrency: options.concurrency,
       createAdapter: (model) => {
@@ -398,30 +425,24 @@ export async function startCommand(
       modelConfigDirectory: dirname(resolve(options.runtimesFile)),
       models,
       ...(options.onProgress ? { onProgress: options.onProgress } : {}),
+      onReport: publishReport,
       repeatCount: options.repeatCount,
       runId: options.runId,
       seed: options.seed,
       suite: suiteDefinition.suite,
       suiteDirectory: suiteDefinition.suiteDirectory
     });
+    await publishReport(report);
     await Promise.all([
-      writeFile(
-        resolve(runDirectory, "run.json"),
-        `${JSON.stringify(report, null, 2)}\n`,
-        { mode: 0o600 }
-      ),
       writeFile(
         resolve(runDirectory, "start.json"),
         `${JSON.stringify({ images, networks, plan }, null, 2)}\n`,
         { mode: 0o600 }
       )
     ]);
-    const packageReport = dependencies.packageReport ?? reportCommand;
-    const packaged = await packageReport(
-      journalFile,
-      resolve(runDirectory, "report"),
-      new Date((dependencies.now ?? Date.now)()).toISOString()
-    );
+    if (!packaged) {
+      throw new RedactBenchError("CONFIG_INVALID", "live report packaging did not complete");
+    }
     return {
       dryRun: false,
       plan,

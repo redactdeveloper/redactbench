@@ -163,7 +163,6 @@ function commandFor(values, prompt) {
         ...common,
         argv: [
           `${TOOL_ROOT}/agy`,
-          "--print",
           "--model",
           values.model,
           ...values.modelArguments,
@@ -171,6 +170,9 @@ function commandFor(values, prompt) {
           "accept-edits",
           "--dangerously-skip-permissions",
           "--sandbox",
+          "--print-timeout",
+          "55m0s",
+          "--print",
           prompt
         ]
       };

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -92,6 +92,42 @@ describe("formatRunProgress", () => {
     expect(output).toContain("Static report: /tmp/report/index.html");
     expect(output).toContain("Run directory: /tmp/run spoofed");
     expect(output).not.toContain("unsafe.test");
+  });
+
+  it("withholds terminal rank for an invalid completed run", () => {
+    const invalidReport = ReportSchema.parse({
+      ...report,
+      validity: {
+        infrastructureFailureCount: 1,
+        modelOutputFailureCount: 0,
+        providerFailureCount: 0,
+        validForRanking: false
+      }
+    });
+    const output = formatStartResult({
+      dryRun: false,
+      plan: {
+        attemptCount: 88,
+        concurrency: 1,
+        entrantCount: 11,
+        entrants: [],
+        generationCount: 99,
+        generationLimit: 100,
+        generationReady: true,
+        repeatCount: 1,
+        runId: "invalid-run",
+        seed: 20_260_712,
+        suiteTitle: "Demo",
+        taskCount: 8
+      },
+      report: invalidReport,
+      reportFile: "/tmp/report/index.html",
+      runDirectory: "/tmp/run"
+    });
+
+    expect(output).toContain("Ranking withheld");
+    expect(output).toContain("Infrastructure failures: 1");
+    expect(output).toContain("—  Fixture Strong");
   });
 });
 
@@ -194,12 +230,21 @@ describe("startCommand", () => {
         totalAttempts: 88,
         type: "run.ready"
       });
+      const provisional = ReportSchema.parse({
+        ...report,
+        run: { ...report.run, completedAt: null }
+      });
+      await input.onReport?.(provisional);
+      expect(JSON.parse(await readFile(join(outDirectory, "target-dry-run", "report", "report.json"), "utf8")))
+        .toEqual(provisional);
       return report;
     });
-    const packageReport = vi.fn(async (_journal, output) => ({
-      file: join(output, "report.json"),
-      report
-    }));
+    const packageReport = vi.fn(async (_journal, output) => {
+      await mkdir(output, { recursive: true });
+      await writeFile(join(output, "index.html"), "<!doctype html>");
+      await writeFile(join(output, "report.json"), `${JSON.stringify(report)}\n`);
+      return { file: join(output, "report.json"), report };
+    });
 
     try {
       const result = await startCommand(
@@ -238,6 +283,8 @@ describe("startCommand", () => {
       expect(packageReport).toHaveBeenCalledOnce();
       expect(cleanup).toHaveBeenCalledOnce();
       expect(JSON.parse(await readFile(join(result.runDirectory, "run.json"), "utf8")))
+        .toEqual(report);
+      expect(JSON.parse(await readFile(join(result.runDirectory, "report", "report.json"), "utf8")))
         .toEqual(report);
       const output = formatStartResult(result);
       expect(output).toContain("Fixture Strong");

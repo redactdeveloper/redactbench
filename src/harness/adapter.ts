@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -123,7 +123,10 @@ export function createHarnessAdapter(
       const temporary = await mkdtemp(join(tmpdir(), "redactbench-harness-prompt-"));
       const promptFile = join(temporary, "prompt.txt");
       const prompt = promptForHarness(request);
-      await writeFile(promptFile, prompt, { mode: 0o600 });
+      // The random parent directory remains owner-only, while the bind-mounted
+      // file must be readable by the container's unprivileged UID 65532.
+      await writeFile(promptFile, prompt, { mode: 0o444 });
+      await chmod(promptFile, 0o444);
       const startedAtMs = Date.now();
 
       try {

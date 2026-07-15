@@ -20,6 +20,7 @@ describe("container harness runner", () => {
       [
         "#!/usr/bin/env node",
         "const fs = require('node:fs');",
+        "fs.writeFileSync('agent-argv.json', JSON.stringify(process.argv.slice(2)));",
         "fs.writeFileSync('agent-edit.txt', 'edited inside workspace\\n');",
         "process.stdout.write('Implemented the requested workspace change.\\n');"
       ].join("\n"),
@@ -61,6 +62,19 @@ describe("container harness runner", () => {
       });
       expect(await readFile(join(workspace, "agent-edit.txt"), "utf8"))
         .toBe("edited inside workspace\n");
+      expect(JSON.parse(await readFile(join(workspace, "agent-argv.json"), "utf8")))
+        .toEqual([
+          "--model",
+          "fixture-model",
+          "--mode",
+          "accept-edits",
+          "--dangerously-skip-permissions",
+          "--sandbox",
+          "--print-timeout",
+          "55m0s",
+          "--print",
+          "Private benchmark prompt fixture"
+        ]);
     } finally {
       await rm(root, { force: true, recursive: true });
     }

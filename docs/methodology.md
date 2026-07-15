@@ -21,6 +21,8 @@ run ID × task ID × model ID × repeat number
 
 Обычный attempt выполняет один stateless provider request. Context Recovery выполняет два stateless requests внутри одного attempt. Завершённый `attemptId` не запускается повторно при resume.
 
+Порядок запуска строится блоками `task × repeat`. Внутри каждого блока каждая модель получает ровно одну попытку; порядок моделей циклически вращается между блоками. При наличии `seed` и блоки, и базовый порядок моделей перемешиваются детерминированно. Это распределяет временной/provider drift равномернее, чем одно глобальное случайное перемешивание. Resume сначала восстанавливает полный исходный schedule, а затем удаляет уже завершённые attempts, поэтому относительный порядок оставшейся работы не меняется.
+
 Перед запросом RedactBench детерминированно сортирует и сериализует workspace. Из snapshot исключаются evaluator, `.git`, `.redactbench`, `node_modules`, symlinks и credential-shaped файлы. Binary/oversized files представлены только метаданными и SHA-256. Один и тот же разрешённый workspace даёт один prompt hash.
 
 ## Provider path
@@ -87,6 +89,18 @@ model_score = mean(complete repeat_scores)
 Repeat считается полным, когда у модели есть attempt для каждой ожидаемой task; error-attempt остаётся в результате со score `0`, а не исчезает из знаменателя. Category score использует ту же формулу для полного набора tasks категории. Пока нет ни одного полного repeat, незавершённый report показывает provisional weighted score уже записанных attempts, но не строит interval.
 
 `taskWeight` сохраняется рядом с каждым attempt в JSON report. Поэтому dashboard и внешние consumers пересчитывают отфильтрованный score той же weighted-формулой, а не простым средним задач.
+
+## Валидность прогона и ошибки
+
+Нулевой score attempt и пригодность всего run для публичного ranking — разные величины. Report классифицирует ошибки только по стабильному `error.code`, а не по тексту сообщения:
+
+- `PATCH_REJECTED` означает невалидный ответ модели. Attempt получает ноль, но run остаётся пригодным для ranking;
+- `PROVIDER_ERROR` означает сбой provider/harness transport и делает run непригодным для финального ranking;
+- `ATTEMPT_ERROR`, `SANDBOX_ERROR` и неизвестные attempt-level errors считаются инфраструктурными и также блокируют ranking.
+
+Invalid run сохраняет все attempts, checks, timing и scores для диагностики. CLI и публичная таблица показывают `Ranking withheld` вместо присвоения мест. После исправления внешней причины нужен новый run или контролируемый resume; удалять ошибочный attempt из журнала нельзя.
+
+Check-level `failed`, `timeout` и `OUTPUT_LIMIT` остаются частью результата задания. Они могут быть следствием неправильного, зависающего или слишком шумного кода модели и сами по себе не делают run инфраструктурно невалидным. Check-level `DOCKER_ERROR`, `DOCKER_UNAVAILABLE` и `SANDBOX_ERROR`, напротив, увеличивают infrastructure failure count и блокируют ranking.
 
 ## Неопределённость повторов
 

@@ -1,0 +1,29 @@
+schemaVersion: 1
+id: bounded-priority-allocation
+title: Allocate bounded requests by priority
+category: algorithms
+description: Select whole requests under a capacity limit with deterministic priority ordering.
+prompt: |
+  Implement selectRequests(requests, limit). Each request is { id, priority, units }: id is a unique non-empty string, priority is a finite integer, and units is a positive integer. limit is a non-negative integer. Consider requests by descending priority and then ascending id. Accept a request only when all its units fit in the remaining limit; otherwise skip it and continue. Return accepted IDs in selection order. Return [] for malformed input. Do not mutate requests or its objects. Keep the exported function name and parameters unchanged.
+tags: [release-candidate, javascript, greedy]
+checks:
+  - id: priority-selection
+    label: Selects by descending priority
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, priority]
+    weight: 2
+  - id: skip-oversized
+    label: Skips requests that do not fit
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, bounded]
+    weight: 2
+  - id: deterministic-ties
+    label: Resolves equal priorities by ID
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, ties]
+    weight: 2
+  - id: allocation-contract
+    label: Validates input without mutation
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, contract]
+    weight: 2

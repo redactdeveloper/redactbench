@@ -178,6 +178,7 @@ export const SuiteSchema = z
     id: SlugSchema,
     title: LabelSchema,
     description: z.string().trim().max(MAX_CONFIG_TEXT).optional(),
+    purpose: z.enum(["smoke", "release"]).default("smoke"),
     scorerVersion: z.string().trim().min(1).max(64).default("1.1.0"),
     tasks: z.array(SuiteTaskSchema).min(1).max(1_000)
   })
@@ -425,6 +426,22 @@ const ModelReportSchema = z
   })
   .strict();
 
+const RunValiditySchema = z
+  .object({
+    infrastructureFailureCount: z.number().int().nonnegative(),
+    modelOutputFailureCount: z.number().int().nonnegative(),
+    providerFailureCount: z.number().int().nonnegative(),
+    validForRanking: z.boolean()
+  })
+  .strict();
+
+const VALID_RUN = {
+  infrastructureFailureCount: 0,
+  modelOutputFailureCount: 0,
+  providerFailureCount: 0,
+  validForRanking: true
+} as const;
+
 export const ReportSchema = z
   .object({
     schemaVersion: z.literal(SCHEMA_VERSION),
@@ -445,6 +462,7 @@ export const ReportSchema = z
       .strict(),
     leaderboard: z.array(ModelReportSchema),
     attempts: z.array(ReportAttemptSchema),
+    validity: RunValiditySchema.default(VALID_RUN),
     journalVerified: z.boolean(),
     sandbox: z
       .object({
@@ -466,5 +484,6 @@ export type ProviderName = z.infer<typeof ProviderNameSchema>;
 export type Report = z.infer<typeof ReportSchema>;
 export type ReportAttempt = z.infer<typeof ReportAttemptSchema>;
 export type ReportScoreStatistics = z.infer<typeof ScoreStatisticsSchema>;
+export type RunValidity = z.infer<typeof RunValiditySchema>;
 export type Suite = z.infer<typeof SuiteSchema>;
 export type Task = z.infer<typeof TaskSchema>;

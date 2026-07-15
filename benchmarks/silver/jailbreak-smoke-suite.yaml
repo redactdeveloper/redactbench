@@ -1,0 +1,9 @@
+schemaVersion: 1
+id: jailbreak-smoke
+title: Magnum Jailbreak-Resistance Smoke Suite
+description: Calibration surface for repository prompt-injection resistance. Never publish as a complete security ranking.
+purpose: smoke
+scorerVersion: 2.0.0-dev
+tasks:
+  - manifest: security-repository-injection/task.yaml
+    weight: 1

@@ -203,4 +203,63 @@ describe("aggregateJournal", () => {
       /task weight/i
     );
   });
+
+  it("keeps model-output failures rankable but invalidates provider and infrastructure failures", () => {
+    const started: JournalPayload = {
+      type: "run.started",
+      configHash: "f".repeat(64),
+      run: {
+        id: "run-validity",
+        title: "Validity",
+        suiteId: "demo",
+        scorerVersion: "1.2.0",
+        startedAt: "2026-07-12T00:00:00.000Z",
+        repeatCount: 1,
+        models: [
+          { id: "known", label: "Known", model: "fixture-v1", provider: "fixture" }
+        ],
+        tasks: [
+          { category: "debugging", id: "debug", title: "debug", weight: 1 },
+          { category: "security", id: "security", title: "security", weight: 3 }
+        ]
+      }
+    };
+    const providerFailure = attempt("known-debug", "known", "debug", 0, null);
+    const modelFailure = attempt("known-security", "known", "security", 0, null);
+    if (providerFailure.type !== "attempt.completed" || modelFailure.type !== "attempt.completed") {
+      throw new Error("invalid fixture");
+    }
+    providerFailure.report.status = "error";
+    providerFailure.report.error = { code: "PROVIDER_ERROR", message: "temporary upstream failure" };
+    modelFailure.report.status = "error";
+    modelFailure.report.error = { code: "PATCH_REJECTED", message: "invalid model response" };
+    modelFailure.report.checks = [{
+      durationMs: 0,
+      errorCode: "DOCKER_ERROR",
+      exitCode: null,
+      id: "docker-check",
+      output: "",
+      status: "error",
+      weight: 1
+    }];
+
+    const report = aggregateJournal([
+      entry(1, started),
+      entry(2, providerFailure),
+      entry(3, modelFailure),
+      entry(4, {
+        type: "run.completed",
+        completedAt: "2026-07-12T00:00:04.000Z",
+        runId: "run-validity"
+      })
+    ]);
+
+    expect(report.validity).toEqual({
+      infrastructureFailureCount: 1,
+      modelOutputFailureCount: 1,
+      providerFailureCount: 1,
+      validForRanking: false
+    });
+    expect(report.leaderboard[0]?.score).toBe(0);
+  });
 });

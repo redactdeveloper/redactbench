@@ -64,8 +64,8 @@ describe("target harness catalog", () => {
       ["grok-4-5-high-grok-build", "grok-4.5", ["--reasoning-effort", "high"]],
       ["grok-build-grok-build", "grok-composer-2.5-fast", []],
       ["cursor-composer-2-5-cursor", "composer-2.5", []],
-      ["gemini-3-5-flash-high-agy", "Gemini 3.5 Flash (High)", []],
-      ["gemini-3-1-pro-high-agy", "Gemini 3.1 Pro (High)", []],
+      ["gemini-3-5-flash-high-agy", "Gemini 3.5 Flash (High)", ["--new-project"]],
+      ["gemini-3-1-pro-high-agy", "Gemini 3.1 Pro (High)", ["--new-project"]],
       ["glm-5-2-max-opencode", "zai/glm-5.2", ["--variant", "max"]],
       ["hy3-high-opencode", "openrouter/tencent/hy3", ["--variant", "high"]]
     ]);

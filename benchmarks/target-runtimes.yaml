@@ -44,7 +44,7 @@ runtimes:
       schemaVersion: 1
       execution: docker
       harness: agy
-      image: redactbench/harness-agy:1.1.1-rb0.3.0
+      image: redactbench/harness-agy:1.1.1-rb0.3.0.2
       argv: [redactbench-harness, --harness, agy, --model, "{model}", "{modelArguments}", --workspace, "{workspace}", --prompt-file, "{promptFile}"]
       promptTransport: file
       network: redactbench-egress-google
@@ -108,9 +108,11 @@ bindings:
   - entrantId: gemini-3-5-flash-high-agy
     runtimeId: agy
     model: Gemini 3.5 Flash (High)
+    modelArguments: [--new-project]
   - entrantId: gemini-3-1-pro-high-agy
     runtimeId: agy
     model: Gemini 3.1 Pro (High)
+    modelArguments: [--new-project]
   - entrantId: glm-5-2-max-opencode
     runtimeId: opencode-zai
     model: zai/glm-5.2

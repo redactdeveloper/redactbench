@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { loadYamlConfig } from "./config.js";
 import type { ModelConfigFile, Suite, Task } from "./contracts.js";
 import {
+  BenchmarkCategorySchema,
   ModelConfigFileSchema,
   ModelConfigFileSchema as ModelsSchema,
   SuiteSchema,
@@ -85,6 +86,35 @@ export async function loadSuiteDefinition(
       `${task.id} evaluator`
     );
     tasks.push({ directory, manifest, task, weight: suiteTask.weight });
+  }
+
+  if (suite.purpose === "release") {
+    const directories = new Set<string>();
+    for (const entry of tasks) {
+      if (directories.has(entry.directory)) {
+        throw new RedactBenchError(
+          "CONFIG_INVALID",
+          `release tasks must use independent directories: ${entry.directory}`
+        );
+      }
+      directories.add(entry.directory);
+    }
+
+    const categoryCounts = Object.fromEntries(
+      BenchmarkCategorySchema.options.map((category) => [category, 0])
+    ) as Record<(typeof BenchmarkCategorySchema.options)[number], number>;
+    for (const entry of tasks) {
+      categoryCounts[entry.task.category] += 1;
+    }
+    const insufficient = BenchmarkCategorySchema.options
+      .filter((category) => categoryCounts[category] < 3)
+      .map((category) => `${category}: ${categoryCounts[category]}`);
+    if (insufficient.length > 0) {
+      throw new RedactBenchError(
+        "CONFIG_INVALID",
+        `release suite requires at least 3 tasks per category; ${insufficient.join(", ")}`
+      );
+    }
   }
 
   return { suite, suiteDirectory, suiteFile, tasks };

@@ -149,6 +149,7 @@ schemaVersion: 1
 id: my-suite
 title: My reproducible suite
 description: Tasks for a fixed research question.
+purpose: smoke
 scorerVersion: 1.0.0
 tasks:
   - manifest: my-task/task.yaml
@@ -160,6 +161,15 @@ tasks:
 Manifest path не может повторяться. Меняйте `scorerVersion`, если изменились checks, weights или scoring semantics так, что старые и новые результаты нельзя честно сравнивать.
 
 Suite task weight сохраняется в каждом report attempt. Общий, category и dashboard-filtered scores используют одну формулу `Σ(score × weight) / Σ(weight)`.
+
+`purpose: smoke` подходит для harness regression, authoring и дешёвых проверок. Это значение используется по умолчанию для старых manifests. `purpose: release` включает более строгий контракт:
+
+- минимум три задачи в каждой из восьми категорий;
+- каждый task manifest находится в собственной реальной директории;
+- workspace и evaluator остаются внутри owning task directory;
+- symlink aliases и два manifests, разделяющие один task directory, отклоняются.
+
+Общие pinned Docker images допустимы: они задают среду выполнения, а не состояние задачи. Общие workspace, evaluator fixtures или generated state между release tasks запрещены.
 
 При repeats RedactBench считает 95% Student-t interval по полному weighted suite score каждого завершённого repeat. Неполный repeat не участвует в uncertainty statistics; при `n < 2` interval равен `null`. Для сравнительного запуска задавайте `--repeat 3+` и фиксируйте `--seed`, scorer version, model IDs, Docker images и условия машины/сети.
 

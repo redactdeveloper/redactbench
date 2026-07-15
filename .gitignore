@@ -12,8 +12,16 @@ tmp/
 .env
 .env.*
 !.env.example
+.npmrc
+.pypirc
+.netrc
+auth.json
+credentials.json
 *.key
 *.pem
+*.p12
+*.pfx
+*.token
 
 # Editor and OS state.
 .DS_Store

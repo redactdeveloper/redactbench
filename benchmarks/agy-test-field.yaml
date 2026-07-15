@@ -1,0 +1,17 @@
+schemaVersion: 1
+id: agy-gemini-test-field
+title: AGY Gemini Test Field
+description: Two-model authenticated AGY smoke field for pre-release benchmark verification.
+entrants:
+  - id: gemini-3-5-flash-high-agy
+    order: 1
+    displayName: Gemini 3.5 Flash High
+    provider: google
+    harness: agy
+    execution: docker
+  - id: gemini-3-1-pro-high-agy
+    order: 2
+    displayName: Gemini 3.1 Pro High
+    provider: google
+    harness: agy
+    execution: docker

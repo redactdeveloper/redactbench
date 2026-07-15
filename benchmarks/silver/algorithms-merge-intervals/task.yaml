@@ -1,0 +1,28 @@
+schemaVersion: 1
+id: merge-inclusive-intervals
+title: Merge inclusive numeric intervals
+category: algorithms
+description: Normalize unsorted inclusive intervals without mutating caller-owned data.
+prompt: Implement mergeIntervals(intervals). Each valid interval is a two-element array [start, end] of finite numbers with start <= end. Return a new array sorted by start, merging overlapping, nested, or touching inclusive intervals. Return [] for a non-array input or if any interval is malformed. Do not mutate intervals or its nested arrays. Keep the exported function name and parameter unchanged.
+tags: [release-candidate, javascript, intervals]
+checks:
+  - id: overlap-merge
+    label: Merges overlapping ranges
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, overlap]
+    weight: 2
+  - id: touching-and-nested
+    label: Merges touching and nested ranges
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, touching]
+    weight: 2
+  - id: ordering-and-numbers
+    label: Handles unsorted negative and fractional ranges
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, ordering]
+    weight: 2
+  - id: validation-and-immutability
+    label: Rejects malformed input without mutation
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, contract]
+    weight: 2

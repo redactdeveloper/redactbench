@@ -49,7 +49,14 @@ const PROFILE_FILES: Readonly<Record<string, readonly string[]>> = {
   REDACTBENCH_CODEX_PROFILE: ["auth.json"],
   REDACTBENCH_GROK_PROFILE: ["auth.json"],
   REDACTBENCH_CURSOR_PROFILE: ["auth.json"],
-  REDACTBENCH_AGY_PROFILE: ["antigravity-cli/antigravity-oauth-token"]
+  REDACTBENCH_AGY_PROFILE: [
+    "antigravity-cli/antigravity-oauth-token",
+    "antigravity-cli/cache/default_project_id.txt",
+    "antigravity-cli/cache/onboarding.json",
+    "antigravity-cli/installation_id",
+    "config/config.json",
+    "config/projects/default-cli-project.json"
+  ]
 };
 const MAX_CREDENTIAL_BYTES = 1_048_576;
 

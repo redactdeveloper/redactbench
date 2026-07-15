@@ -420,3 +420,282 @@ typed field roster
 - [x] `redactbench start --dry-run` доказывает готовность orchestration без model/API calls.
 - [x] Долгий `redactbench start` показывает durable progress и корректный resume count.
 - [x] Default generation envelope пропускает базовый план и блокирует неявное увеличение matrix до preflight.
+
+---
+
+# План повышения измерительной точности v0.4
+
+## Цель
+
+Не позволять сбоям провайдера или benchmark-инфраструктуры выглядеть как слабость модели и уменьшить временной drift между моделями в долгом прогоне.
+
+## Dependency graph
+
+```text
+attempt error taxonomy
+        ↓
+run validity summary → public rank gate → methodology
+        ↓
+balanced block scheduler → deterministic order tests
+```
+
+## Задача 33: Отделить валидность прогона от качества модели
+
+**Критерии приёмки:**
+
+- Report детерминированно считает provider, infrastructure и model-output failures.
+- Наличие provider/infrastructure failure делает run непригодным для финального публичного ranking, не скрывая сохранённый task score.
+- Public leaderboard показывает invalid-run state и не присваивает Rank.
+
+**Проверка:** aggregate contract tests, component test, browser smoke, methodology consistency.
+
+## Задача 34: Сбалансировать порядок попыток
+
+**Критерии приёмки:**
+
+- Scheduler строит блоки `task × repeat` и детерминированно меняет порядок моделей внутри блоков.
+- Одинаковый seed воспроизводит порядок; разные seeds меняют его.
+- До начала следующего блока каждая модель получает ровно одну попытку текущей задачи и repeat.
+
+**Проверка:** exact scheduling unit tests и run-resume regression.
+
+## Риски
+
+| Риск | Влияние | Мера |
+|---|---|---|
+| Ошибка модели ошибочно считается infrastructure failure | Высокое | Классифицировать по стабильному error code, а не по тексту сообщения |
+| Invalid run теряет диагностические данные | Высокое | Сохранять attempts и scores; блокировать только утверждение final rank |
+| Block scheduling увеличивает correlation | Среднее | Перемешивать blocks и вращать model order детерминированно по seed |
+
+---
+
+# План независимого Magnum release-suite
+
+## Цель
+
+Создать отдельный от demo релизный корпус. Каждая задача владеет собственными `workspace`, `evaluator`, fixtures и hidden checks. Публичный suite допускается к запуску только при достаточном количестве независимых задач в каждой категории.
+
+## Архитектурные решения
+
+- `demo` остаётся быстрым regression smoke и никогда не становится публичным корпусом.
+- `release` является отдельным suite purpose с минимум тремя задачами на каждую из восьми категорий.
+- Два task manifest не могут находиться в одном task directory или ссылаться на общий workspace/evaluator через symlink.
+- Checks одной задачи не используются другой задачей; общими могут быть только pinned runtime images.
+- Release suite запускается с `repeat >= 3`; меньший repeat разрешён только для authoring/validation, но не для финальной публикации.
+
+## Dependency graph
+
+```text
+suite purpose contract
+        ↓
+independence + category coverage validation
+        ↓
+benchmarks/silver task corpus
+        ↓
+fixture calibration → paid release run
+```
+
+## Задача 35: Контракт release-suite
+
+- Добавить `purpose: smoke | release`.
+- Для release требовать минимум три task на каждую категорию.
+- Отклонять shared task directories и symlink aliases.
+
+## Задача 36: Независимый Silver corpus
+
+- Создать `benchmarks/silver` отдельно от `benchmarks/demo`.
+- Добавить по три независимых task на восемь категорий.
+- Для каждой task иметь strong/partial/adversarial calibration cases.
+
+Задача 36 выполняется восемью независимыми срезами:
+
+1. 36A Algorithms: interval merge, dependency ordering, bounded allocation.
+2. 36B Debugging: stale memoization, sparse pagination, async cleanup.
+3. 36C Refactoring: state ownership, dependency boundary, error normalization.
+4. 36D Security: archive containment, tenant authorization, webhook verification.
+5. 36E UI: modal focus, sortable table semantics, async form state.
+6. 36F Reasoning: retry amplification, transaction boundary, configuration precedence.
+7. 36G Pushback: false runtime guarantee, impossible complexity claim, invalid cryptographic premise.
+8. 36H Context Recovery: parser migration, cache split, request-policy extraction.
+
+Каждый срез сначала подключается к отдельному `authoring-suite.yaml` с `purpose: smoke`. Финальный `suite.yaml` с `purpose: release` создаётся только после готовности всех 24 tasks, поэтому неполный corpus нельзя случайно опубликовать.
+
+## Задача 37: Publication gate
+
+- Финальный public Rank требует release purpose, repeat `3+`, valid run и полный category coverage.
+- Smoke/filtered runs остаются видимыми, но маркируются non-publishable.
+- CLI и dashboard объясняют конкретную причину блокировки.
+
+## Контрольные точки
+
+- После задачи 35: contract/definition tests, demo обратно совместим.
+- После каждых двух категорий задачи 36: targeted fixture validation и независимый filesystem audit.
+- После задачи 37: fresh full fixture run, 3 repeats, browser и methodology audit.
+
+---
+
+# План нового Magnum Gold benchmark
+
+## Цель
+
+Создать `benchmarks/gold` как новый release-корпус, который не наследует задания, prompts, workspace, evaluator code или calibration fixtures Silver. Gold проверяет работу с небольшими реалистичными репозиториями и неоднозначными failure modes, а не повторяет набор изолированных функций Silver под другими именами.
+
+## Зафиксированные границы
+
+- Silver остаётся без изменений и не является шаблоном для копирования Gold-задач.
+- Gold получает собственные task IDs, директории, исходные дефекты, hidden checks и calibration solutions; symlink, import или filesystem dependency на `benchmarks/silver` запрещены.
+- После появления первой задачи используется только `benchmarks/gold/authoring-suite.yaml` с `purpose: smoke`; `suite.yaml` с `purpose: release` появляется последним. Пустой manifest не создаётся, потому что текущий suite contract требует минимум одну задачу.
+- Первая реализация охватывает Gold contract и один полный category slice. Остальные категории добавляются только после проверки, что первый slice действительно различает strong, partial и unsafe решения.
+- Незакоммиченные изменения Silver считаются пользовательской работой и не изменяются в рамках Gold.
+
+## Архитектурные решения
+
+- **Corpus identity.** Gold использует отдельный suite ID и `scorerVersion: 3.0.0-dev`, чтобы результаты нельзя было смешать с Silver даже при одинаковой модели и конфигурации запуска.
+- **Реалистичные вертикальные задачи.** Каждая задача содержит 2–4 связанных source/config/test artifacts и требует понять существующее поведение; задача не сводится к реализации одной функции по исчерпывающему prompt.
+- **Атомарное оценивание.** Минимум четыре hidden checks разделяют основное поведение, edge cases, сохранение совместимости и нежелательные побочные изменения, поэтому partial solution получает объяснимый промежуточный score.
+- **Независимая калибровка.** Для каждой задачи есть `strong`, `partial` и `adversarial` fixture; evaluator принимает fixture path только в authoring tests, а production path по-прежнему проверяет workspace модели.
+- **Запрет содержательного клонирования.** Gold audit проверяет реальные пути, отсутствие ссылок на Silver, уникальность task IDs и нормализованные prompt/workspace fingerprints. Совпадение инфраструктурного boilerplate evaluator допустимо только там, где оно неизбежно для запуска проверки.
+
+## Dependency graph
+
+```text
+Gold identity + independence audit
+                ↓
+first category task 1 → calibration
+                ↓
+first category task 2 → calibration
+                ↓
+first category task 3 → calibration
+                ↓
+category checkpoint and difficulty review
+                ↓
+remaining seven category slices
+                ↓
+Gold release suite → publication gate → docs
+```
+
+## Задача 38: Зафиксировать Gold identity и anti-reuse gate
+
+**Описание:** Добавить переиспользуемый audit и тестовые filesystem fixtures, которые доказывают физическую и содержательную независимость будущего Gold-корпуса. Реальный authoring manifest добавляется вместе с первой задачей, чтобы каждый инкремент оставался валидным.
+
+**Критерии приёмки:**
+
+- Audit отклоняет symlink, realpath за пределами Gold, импорт/ссылку на `benchmarks/silver`, повтор task ID и точное совпадение нормализованного prompt или workspace file.
+- Audit принимает независимые temporary Gold fixtures и может применяться к реальному корпусу после появления первой задачи.
+- Проверка не требует изменения общего suite schema и не ломает существующие demo/Silver manifests.
+
+**Проверка:** targeted Gold audit tests, затем `npm run typecheck` и существующие definition contract tests.
+
+**Зависимости:** задача 35.
+
+**Вероятно затронутые файлы:** `src/corpus-independence.ts`, `tests/gold-independence.test.ts`.
+
+**Оценка размера:** Small — 2 файла.
+
+## Задачи 39A–39C: Первый Gold slice — Debugging
+
+Первой категорией будет debugging, потому что она быстрее выявит, способен ли новый формат оценивать диагностику по связанному репозиторию, а не угадывание алгоритма по полному контракту.
+
+### Задача 39A: Восстановление checkpoint после оборванной записи
+
+Модель получает небольшой importer, где crash между записью data и checkpoint вызывает пропуск строк после resume. Решение должно восстановить порядок durable write, сохранить идемпотентность и не перечитывать уже подтверждённые записи.
+
+**Критерии приёмки:** задача создаёт первый smoke-only authoring manifest с отдельными suite ID и `scorerVersion: 3.0.0-dev`; happy-path resume, injected crash, повторный resume и backward-compatible checkpoint parsing оцениваются отдельными checks; strong/partial/adversarial fixtures дают разные профили.
+
+**Проверка:** evaluator modes, manifest load и calibration matrix test.
+
+**Зависимости:** задача 38.
+
+**Оценка размера:** Medium — одна независимая task directory и один targeted test update.
+
+### Задача 39B: Устранение гонки refresh в expiring cache
+
+Модель получает cache с параллельным refresh, где истёкшее значение создаёт несколько loader calls и поздний reject удаляет более новое значение. Решение должно дедуплицировать in-flight work без изменения public API.
+
+**Критерии приёмки:** concurrent miss, stale rejection, TTL boundary и error retry проверяются независимо; evaluator подтверждает отсутствие глобальной сериализации разных keys.
+
+**Проверка:** deterministic fake-clock evaluator и calibration matrix test.
+
+**Зависимости:** задача 38 и checkpoint после 39A.
+
+**Оценка размера:** Medium — одна независимая task directory и один targeted test update.
+
+### Задача 39C: Исправление DST-сдвига recurring scheduler
+
+Модель получает scheduler, который вычисляет следующий локальный запуск прибавлением 24 часов и ошибается на переходах DST. Решение должно сохранить wall-clock intent, корректно обработать skipped/duplicated local time и не менять UTC-only schedules.
+
+**Критерии приёмки:** spring-forward, fall-back, обычная дата и UTC regression оцениваются отдельно; invalid timezone остаётся явной ошибкой.
+
+**Проверка:** pinned timezone data, table-driven evaluator и calibration matrix test.
+
+**Зависимости:** задача 38 и checkpoint после 39B.
+
+**Оценка размера:** Medium — одна независимая task directory и один targeted test update.
+
+## Контрольная точка после задач 38–39C
+
+- Authoring suite загружает ровно три новые debugging-задачи и остаётся `purpose: smoke`.
+- Все strong fixtures получают 100%, а partial/adversarial fixtures расходятся хотя бы по двум атомарным checks в каждой задаче.
+- Gold independence audit не находит ссылок, task IDs, prompts или workspace contents из Silver.
+- Targeted tests, полный unit suite, lint, typecheck и build проходят до расширения корпуса.
+- Результаты калибровки просматриваются человеком; слишком простая или хрупкая задача переписывается до следующей категории.
+
+## Задача 40: Добавить остальные семь категорий
+
+Каждая категория реализуется отдельным срезом из трёх новых задач с тем же calibration gate. Конкретные сценарии фиксируются перед началом среза, чтобы не создавать 21 задание по предположениям до проверки первого формата.
+
+- Algorithms: stateful/streaming constraints вместо задач Silver на сортировку и greedy selection.
+- Refactoring: изменение module boundaries с сохранением observable behavior.
+- Security: confused-deputy, canonicalization и replay scenarios, не повторяющие repository injection Silver.
+- UI: accessibility и asynchronous interaction в небольших React workspaces.
+- Reasoning: diagnosis artifacts с проверяемым patch outcome, а не эссе с ключевыми словами.
+- Hallucination: работа с локальной API/documentation evidence и корректный pushback на ложные предпосылки.
+- Context Recovery: multi-file продолжение после reset с измеримым сохранением уже выполненной работы.
+
+**Критерии приёмки:** 24 независимые Gold tasks, по три на каждую schema category; у каждой есть объяснимая calibration matrix и собственные artifacts.
+
+**Проверка:** checkpoint после каждой категории, полный independence audit после каждых двух категорий.
+
+**Зависимости:** контрольная точка 38–39C.
+
+**Оценка размера:** XL-программа, обязательное разбиение на 21 task-sized increments перед реализацией.
+
+## Задача 41: Собрать Gold release-suite и publication path
+
+**Описание:** Создать release manifest только после прохождения всех corpus gates, подключить Gold identity к publication decision и описать воспроизводимый запуск без переименования Silver results.
+
+**Критерии приёмки:** Gold release содержит 24 задачи и проходит category/independence validation; publishable run требует `repeat >= 3`, полный валидный run и scorer `3.x`; UI и CLI явно показывают Gold как отдельный benchmark.
+
+**Проверка:** fixture release run, aggregation/publication tests, browser smoke и methodology audit.
+
+**Зависимости:** задачи 37 и 40.
+
+**Оценка размера:** Medium — manifest, typed publication metadata, tests и docs отдельными инкрементами.
+
+## Риски и меры
+
+| Риск | Влияние | Мера |
+|---|---|---|
+| Gold становится переименованным Silver | Высокое | Anti-reuse audit плюс ручная проверка сценария до реализации каждой категории |
+| Hidden checks проверяют конкретную реализацию | Высокое | Проверять observable behavior и держать минимум две независимо написанные strong fixtures на сложных задачах |
+| Calibration fixtures раскрывают hidden cases модели | Среднее | Fixtures остаются в evaluator и никогда не входят в prompt/workspace snapshot |
+| Три debugging-задачи требуют слишком много harness changes | Среднее | Первый slice использует текущий patch protocol и pinned runtime; расширение contracts выносится в отдельную будущую задачу |
+| Новый корпус смешивается с незавершённым Silver | Высокое | Отдельные directory, corpus/scorer identity и отсутствие release manifest до полного Gold gate |
+
+## Открытый вопрос для контрольной точки
+
+- После первого debugging slice решить по фактической calibration matrix, сохранять ли размер Gold на уровне 24 задач или увеличить число реплик только в категориях с высокой дисперсией.
+
+## Фактический результат первого Gold slice
+
+- Реализован independence audit и три независимые debugging-задачи: durable checkpoint, expiring cache refresh race и local-time scheduler.
+- Strong fixtures проходят 4/4 checks во всех задачах; partial/adversarial профили соответственно разделяются как `3/4 vs 3/4` по разным checks, `2/4 vs 2/4` и `2/4 vs 1/4`.
+- Полный unit suite: 169 tests passed; typecheck и production build прошли.
+- Targeted Gold lint чистый. Общий lint останавливается на ранее существовавшем `structuredClone` в незакоммиченном Silver evaluator; этот файл не изменялся в Gold-инкрементах.
+
+## Фактический результат Gold Algorithms slice
+
+- Добавлены три новые stateful/streaming задачи: chunk-safe JSONL decoder, watermarked event-time buffer и persistent deficit scheduler.
+- Calibration profiles: JSONL `4/4, 3/4, 1/4`; event buffer `4/4, 2/4, 0/4`; deficit scheduler `4/4, 1/4, 1/4` с разными failed checks.
+- Gold authoring suite теперь содержит шесть независимых задач в двух полных категориях и остаётся `purpose: smoke`.
+- Checkpoint: 184 tests passed, typecheck, targeted Gold lint и production build прошли; independence audit не нашёл reuse Silver.

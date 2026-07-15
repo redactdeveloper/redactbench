@@ -1,0 +1,28 @@
+schemaVersion: 1
+id: deterministic-build-order
+title: Resolve a deterministic dependency order
+category: algorithms
+description: Produce a stable topological order while rejecting invalid dependency graphs.
+prompt: Implement buildOrder(nodes, edges). nodes is an array of unique non-empty strings. Each edge is [before, after] and both names must exist in nodes. Return a valid topological order, always choosing the lexicographically smallest currently available node. Return [] for an empty valid graph and null for malformed input, duplicate nodes, self-edges, unknown nodes, or cycles. Do not mutate either input. Keep the exported function name and parameters unchanged.
+tags: [release-candidate, javascript, graphs]
+checks:
+  - id: dependency-order
+    label: Respects dependency chains and branches
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, dependency]
+    weight: 2
+  - id: deterministic-choice
+    label: Chooses the lexical available node
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, lexical]
+    weight: 2
+  - id: cycle-detection
+    label: Rejects cyclic graphs
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, cycle]
+    weight: 2
+  - id: graph-contract
+    label: Validates graph input without mutation
+    image: node:22-alpine
+    argv: [node, /evaluator/check.mjs, contract]
+    weight: 2

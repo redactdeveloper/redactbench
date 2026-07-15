@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -25,6 +25,47 @@ const runtime = HarnessDockerRuntimeSchema.parse({
 });
 
 describe("createHarnessAdapter", () => {
+  it("makes file-transport prompts readable by the non-root container only through the private parent", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "redactbench-adapter-file-"));
+    const fileRuntime = HarnessDockerRuntimeSchema.parse({
+      ...runtime,
+      harness: "agy",
+      argv: ["redactbench-harness", "--model", "{model}", "{modelArguments}", "--workspace", "{workspace}", "--prompt-file", "{promptFile}"],
+      promptTransport: "file",
+      network: "redactbench-egress-google"
+    });
+    const run = vi.fn(async (argv: readonly string[]) => {
+      const mount = argv.find((value) => value.includes("dst=/run/redactbench/prompt.txt"));
+      const source = mount?.match(/src=([^,]+)/u)?.[1];
+      expect(source).toBeDefined();
+      expect((await stat(source!)).mode & 0o777).toBe(0o444);
+      return {
+        durationMs: 10,
+        exitCode: 0,
+        outputLimitExceeded: false,
+        spawnError: null,
+        stderr: "",
+        stdout: JSON.stringify({ schemaVersion: 1, text: "OK", providerRequestId: null, ttftMs: 1, usage: null }),
+        timedOut: false
+      };
+    });
+    const adapter = createHarnessAdapter({
+      binding: { entrantId: "gemini", model: "Gemini 3.5 Flash (High)", modelArguments: [], runtimeId: "agy" },
+      environment: {},
+      entrant: { displayName: "Gemini", execution: "docker", harness: "agy", id: "gemini", order: 1, provider: "google" },
+      run,
+      runtime: fileRuntime,
+      secretFiles: {}
+    });
+
+    try {
+      await adapter.generate({ maxOutputTokens: 64, prompt: "OK", system: "Test", workspaceDirectory: workspace });
+      expect(run).toHaveBeenCalledOnce();
+    } finally {
+      await rm(workspace, { force: true, recursive: true });
+    }
+  });
+
   it("runs a workspace agent in Docker and returns normalized metrics", async () => {
     const workspace = await mkdtemp(join(tmpdir(), "redactbench-adapter-"));
     const run = vi.fn().mockResolvedValue({

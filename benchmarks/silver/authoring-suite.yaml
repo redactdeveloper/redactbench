@@ -1,0 +1,15 @@
+schemaVersion: 1
+id: silver-authoring
+title: Magnum Silver Authoring Suite
+description: Incomplete calibration surface. Never publish scores from this smoke suite.
+purpose: smoke
+scorerVersion: 2.0.0-dev
+tasks:
+  - manifest: algorithms-merge-intervals/task.yaml
+    weight: 1
+  - manifest: algorithms-build-order/task.yaml
+    weight: 1
+  - manifest: algorithms-bounded-allocation/task.yaml
+    weight: 1
+  - manifest: security-repository-injection/task.yaml
+    weight: 1

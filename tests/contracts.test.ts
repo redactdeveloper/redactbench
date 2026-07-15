@@ -122,6 +122,23 @@ describe("TaskSchema", () => {
 });
 
 describe("SuiteSchema", () => {
+  it("defaults legacy suites to smoke and accepts an explicit release purpose", () => {
+    const smoke = SuiteSchema.parse({
+      schemaVersion: 1,
+      id: "demo",
+      title: "Demo suite",
+      tasks: [{ manifest: "debug/task.yaml" }]
+    });
+    const release = SuiteSchema.parse({
+      ...smoke,
+      id: "silver",
+      purpose: "release"
+    });
+
+    expect(smoke.purpose).toBe("smoke");
+    expect(release.purpose).toBe("release");
+  });
+
   it("rejects duplicate task manifests", () => {
     const result = SuiteSchema.safeParse({
       schemaVersion: 1,
