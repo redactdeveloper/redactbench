@@ -30,7 +30,7 @@
     "llm",
     "evals"
   ],
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "@fontsource/ibm-plex-mono": "5.2.7",
     "@fontsource/roboto-condensed": "5.2.8",

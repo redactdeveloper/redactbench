@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Лицензия проекта изменена с MIT на GNU GPL v3 (`GPL-3.0-only`).
+
 ### Added
 
 - Durable progress для долгих benchmark runs: точный initial/resume count, sanitized status после каждой journaled попытки и явное завершение очереди.

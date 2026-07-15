@@ -225,4 +225,4 @@ npm run build
 npm audit --audit-level=high
 ```
 
-Лицензия: MIT.
+Лицензия: GNU General Public License v3.0 only (`GPL-3.0-only`).
